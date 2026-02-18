@@ -87,8 +87,8 @@ export default function CreateIdeaForm({ onSuccessAction }: { onSuccessAction: (
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-theme-secondary ml-1 uppercase tracking-wider">Budget/Stage</label>
-                    <input type="text" className="input-field text-sm" placeholder="e.g. $10k - $50k" value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} />
+                    <label className="text-xs font-bold text-theme-secondary ml-1 uppercase tracking-wider">Budget/Stage (INR)</label>
+                    <input type="text" className="input-field text-sm" placeholder="e.g. ₹10L - ₹50L" value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} />
                 </div>
                 <div className="space-y-1.5">
                     <label className="text-xs font-bold text-theme-secondary ml-1 uppercase tracking-wider">Skills Needed (comma separated)</label>

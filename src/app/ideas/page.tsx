@@ -42,30 +42,39 @@ const categoryIcons: Record<string, ReactElement> = {
     ),
 };
 
+const IDEAS_PER_PAGE = 9;
+
 export default function IdeasPage() {
     const { user } = useAuth();
-    const [ideas, setIdeas] = useState([]);
+    const [ideas, setIdeas] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [sort, setSort] = useState("recent");
     const [category, setCategory] = useState("");
+    const [page, setPage] = useState(1);
+    const [pagination, setPagination] = useState({ page: 1, limit: IDEAS_PER_PAGE, total: 0, pages: 1 });
+    const [hasFetchedSuccess, setHasFetchedSuccess] = useState(false);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const pageRef = useRef<HTMLDivElement>(null);
     const gridRef = useRef<HTMLDivElement>(null);
     const headerAnimated = useRef(false);
 
-    const fetchIdeas = async () => {
+    const fetchIdeas = async (pageNum: number = page) => {
         setLoading(true);
         try {
             const params = new URLSearchParams();
             if (search) params.append("search", search);
             if (sort) params.append("sort", sort);
             if (category) params.append("category", category);
+            params.set("page", String(pageNum));
+            params.set("limit", String(IDEAS_PER_PAGE));
 
             const res = await fetch(`/api/ideas?${params.toString()}`);
-            if (res.ok) {
-                const data = await res.json();
-                setIdeas(data);
+            const data = await res.json();
+            if (res.ok && Array.isArray(data.ideas)) {
+                setIdeas(data.ideas);
+                setPagination(data.pagination || { page: pageNum, limit: IDEAS_PER_PAGE, total: data.ideas.length, pages: 1 });
+                setHasFetchedSuccess(true);
             }
         } catch (error) {
             console.error("Failed to fetch ideas:", error);
@@ -75,9 +84,13 @@ export default function IdeasPage() {
     };
 
     useEffect(() => {
-        const timeoutId = setTimeout(fetchIdeas, 300);
-        return () => clearTimeout(timeoutId);
+        setPage(1);
     }, [search, sort, category]);
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => fetchIdeas(page), 300);
+        return () => clearTimeout(timeoutId);
+    }, [search, sort, category, page]);
 
     // Header entrance + 3D (once) and scroll parallax
     useEffect(() => {
@@ -217,7 +230,7 @@ export default function IdeasPage() {
                         ))}
                     </div>
                 </>
-            ) : ideas.length > 0 ? (
+            ) : hasFetchedSuccess && ideas.length > 0 ? (
                 <>
                     <div ref={gridRef} className="hidden lg:grid grid-cols-2 xl:grid-cols-3 gap-6 items-start">
                         {ideas.map((idea: any) => (
@@ -227,8 +240,36 @@ export default function IdeasPage() {
                     <div className="lg:hidden">
                         <TinderStack ideas={ideas as any} />
                     </div>
+
+                    {/* Pagination */}
+                    {pagination.pages > 1 && (
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                    disabled={page <= 1}
+                                    className="px-4 py-2 rounded-xl bg-[var(--input-bg)] border border-[var(--input-border)] text-theme-primary font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--surface-hover)] transition-all"
+                                >
+                                    Previous
+                                </button>
+                                <span className="text-sm text-theme-secondary font-medium px-2">
+                                    Page {pagination.page} of {pagination.pages}
+                                </span>
+                                <button
+                                    onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))}
+                                    disabled={page >= pagination.pages}
+                                    className="px-4 py-2 rounded-xl bg-[var(--input-bg)] border border-[var(--input-border)] text-theme-primary font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--surface-hover)] transition-all"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                            <p className="text-xs text-theme-muted">
+                                {pagination.total} idea{pagination.total !== 1 ? "s" : ""} total
+                            </p>
+                        </div>
+                    )}
                 </>
-            ) : (
+            ) : hasFetchedSuccess && ideas.length === 0 ? (
                 <div className="py-24 sm:py-32 text-center space-y-4 glass-card rounded-3xl">
                     <div className="w-16 h-16 mx-auto rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
                         <svg className="w-8 h-8 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -248,7 +289,22 @@ export default function IdeasPage() {
                         </button>
                     )}
                 </div>
-            )}
+            ) : !loading && !hasFetchedSuccess ? (
+                <div className="py-24 sm:py-32 text-center space-y-4 glass-card rounded-3xl">
+                    <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                        <svg className="w-8 h-8 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <p className="text-theme-secondary text-sm">Unable to load ideas.</p>
+                    <button
+                        onClick={() => fetchIdeas(1)}
+                        className="mt-4 px-6 py-3 rounded-xl bg-violet-600 text-white font-bold text-sm hover:bg-violet-500"
+                    >
+                        Retry
+                    </button>
+                </div>
+            ) : null}
 
             <Modal
                 isOpen={isCreateModalOpen}
@@ -257,7 +313,8 @@ export default function IdeasPage() {
             >
                 <CreateIdeaForm onSuccessAction={() => {
                     setIsCreateModalOpen(false);
-                    fetchIdeas();
+                    setPage(1);
+                    fetchIdeas(1);
                 }} />
             </Modal>
         </div>

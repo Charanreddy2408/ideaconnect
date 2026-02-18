@@ -69,6 +69,9 @@ export async function POST(req: Request) {
     }
 }
 
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 9;
+
 /* ---------------- GET ALL IDEAS ---------------- */
 
 export async function GET(req: Request) {
@@ -80,6 +83,8 @@ export async function GET(req: Request) {
         const sort = searchParams.get("sort");
         const category = searchParams.get("category");
         const search = searchParams.get("search");
+        const page = Math.max(1, parseInt(searchParams.get("page") || String(DEFAULT_PAGE), 10));
+        const limit = Math.min(30, Math.max(1, parseInt(searchParams.get("limit") || String(DEFAULT_LIMIT), 10)));
 
         const query: any = {};
 
@@ -87,11 +92,23 @@ export async function GET(req: Request) {
             query.category = category;
         }
 
-        if (search) {
-            query.$text = { $search: search };
+        if (search && search.trim()) {
+            const trimmed = search.trim();
+            query.$or = [
+                { title: { $regex: trimmed, $options: "i" } },
+                { summary: { $regex: trimmed, $options: "i" } },
+            ];
         }
 
-        let ideasQuery = Idea.find(query).populate("userId", "name");
+        const baseQuery = Idea.find(query);
+        const total = await Idea.countDocuments(query);
+        const pages = Math.max(1, Math.ceil(total / limit));
+        const skip = (page - 1) * limit;
+
+        let ideasQuery = baseQuery
+            .populate("userId", "name")
+            .skip(skip)
+            .limit(limit);
 
         if (sort === "recent") {
             ideasQuery = ideasQuery.sort({ createdAt: -1 });
@@ -99,11 +116,12 @@ export async function GET(req: Request) {
             ideasQuery = ideasQuery.sort({ voteScore: -1 });
         } else if (sort === "validation") {
             ideasQuery = ideasQuery.sort({ validationScore: -1 });
+        } else {
+            ideasQuery = ideasQuery.sort({ createdAt: -1 });
         }
 
         const ideas = await ideasQuery;
 
-        // If user is authenticated, include their vote status
         const userId = await getAuthUserId();
         if (userId) {
             const ideaIds = ideas.map((idea: any) => idea._id);
@@ -121,16 +139,21 @@ export async function GET(req: Request) {
                 userVote: voteMap.get(idea._id.toString()) || null
             }));
 
-            return NextResponse.json(ideasWithVotes, { status: 200 });
+            return NextResponse.json({
+                ideas: ideasWithVotes,
+                pagination: { page, limit, total, pages },
+            }, { status: 200 });
         }
 
-        // If not authenticated, add null userVote
         const ideasWithoutVotes = ideas.map((idea: any) => ({
             ...idea.toObject(),
             userVote: null
         }));
 
-        return NextResponse.json(ideasWithoutVotes, { status: 200 });
+        return NextResponse.json({
+            ideas: ideasWithoutVotes,
+            pagination: { page, limit, total, pages },
+        }, { status: 200 });
 
     } catch (error) {
         console.error("GET IDEAS ERROR:", error);

@@ -51,16 +51,19 @@ export default function IdeaDetailPage() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     const fetchIdea = async () => {
+        setLoading(true);
         try {
             const res = await fetch(`/api/ideas/${params.id}`);
+            const data = await res.json();
             if (res.ok) {
-                const data = await res.json();
                 setIdea(data);
-            } else {
+            } else if (res.status === 404) {
                 router.push("/ideas");
             }
         } catch (error) {
             console.error("Fetch idea error:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -69,26 +72,35 @@ export default function IdeaDetailPage() {
             const res = await fetch(`/api/ideas/${params.id}/comments`);
             if (res.ok) {
                 const data = await res.json();
-                setComments(data.comments || []);
+                setComments(Array.isArray(data.comments) ? data.comments : []);
             }
         } catch (error) {
             console.error("Fetch comments error:", error);
-        } finally {
-            setLoading(false);
         }
     };
 
     const handlePostComment = async () => {
         if (!commentInput.trim()) return;
         setPostingComment(true);
+        const text = commentInput.trim();
+        setCommentInput("");
         try {
             const res = await fetch(`/api/ideas/${params.id}/comments`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ comment: commentInput }),
+                body: JSON.stringify({ comment: text }),
             });
+            const data = await res.json();
             if (res.ok) {
-                setCommentInput("");
+                const newComment = data.comment;
+                if (newComment) {
+                    const withUser = {
+                        ...newComment,
+                        userId: newComment.userId || (user ? { _id: user.id, name: user.name } : null),
+                        replies: newComment.replies || [],
+                    };
+                    setComments((prev) => [withUser, ...prev]);
+                }
                 fetchComments();
             }
         } catch (error) {
@@ -398,7 +410,7 @@ export default function IdeaDetailPage() {
                     </div>
                     {idea.budget && (
                         <div className="mt-3 pt-3 border-t border-[var(--border-color)]">
-                            <span className="text-[9px] font-bold text-theme-muted uppercase tracking-wider block">Budget</span>
+                            <span className="text-[9px] font-bold text-theme-muted uppercase tracking-wider block">Budget (INR)</span>
                             <span className="text-sm font-bold text-amber-400">{idea.budget}</span>
                         </div>
                     )}
@@ -481,12 +493,12 @@ export default function IdeaDetailPage() {
                         </div>
                     )}
 
-                    {/* Budget / Stage */}
+                    {/* Budget / Stage (INR) */}
                     {idea.budget && (
                         <div className="rounded-2xl border border-[var(--card-border)] overflow-hidden" style={{ background: 'var(--card-bg)' }}>
                             <div className="px-6 py-4 border-b border-[var(--border-color)] flex items-center gap-2" style={{ background: 'var(--input-bg)' }}>
                                 <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                <h3 className="text-xs font-black text-theme-muted uppercase tracking-[0.2em]">Budget / Stage</h3>
+                                <h3 className="text-xs font-black text-theme-muted uppercase tracking-[0.2em]">Budget / Stage (INR)</h3>
                             </div>
                             <div className="p-5">
                                 <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">{idea.budget}</span>
