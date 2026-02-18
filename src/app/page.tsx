@@ -246,7 +246,7 @@ export default function Home() {
                 if (!hPanel) return;
                 const totalWidth = hPanel.scrollWidth - window.innerWidth;
 
-                const hScrollTween = gsap.to(hPanel, {
+                gsap.to(hPanel, {
                     x: -totalWidth, ease: "none",
                     scrollTrigger: {
                         id: "hScroll",
@@ -259,7 +259,8 @@ export default function Home() {
                     },
                 });
 
-                // 3D tilt: cards rotate as they enter/leave view (containerAnimation = the scrubbed tween)
+                // containerAnimation expects the scrubbed Animation, not the ScrollTrigger
+                const hScrollAnimation = ScrollTrigger.getById("hScroll")?.animation;
                 gsap.utils.toArray<HTMLElement>(".feat-card").forEach((card, i) => {
                     gsap.fromTo(card, {
                         rotateY: 15, scale: 0.9, opacity: 0.5,
@@ -267,7 +268,7 @@ export default function Home() {
                         rotateY: 0, scale: 1, opacity: 1,
                         scrollTrigger: {
                             trigger: card,
-                            containerAnimation: hScrollTween,
+                            containerAnimation: hScrollAnimation ?? undefined,
                             start: "left 90%", end: "left 50%", scrub: 1,
                         },
                     });
