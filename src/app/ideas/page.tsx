@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, type ReactElement } from "react";
 import IdeaCard from "@/components/IdeaCard";
 import DesktopCardStack from "@/components/DesktopCardStack";
 import MobileFlipCard from "@/components/MobileFlipCard";
@@ -16,7 +16,7 @@ if (typeof window !== "undefined") {
 
 const categories = ["All", "Tech", "Social", "Fintech", "Health", "Education", "AI", "Web3"];
 
-const categoryIcons: Record<string, JSX.Element> = {
+const categoryIcons: Record<string, ReactElement> = {
     All: (
         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
     ),
