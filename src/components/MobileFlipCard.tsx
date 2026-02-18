@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import VoteButtons from "@/components/VoteButtons";
 
-/* ── Same category styling as IdeaCard ── */
 const catMeta: Record<string, { color: string; bg: string; border: string; glow: string }> = {
     Tech: { color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/25", glow: "shadow-blue-500/20" },
     Social: { color: "text-pink-400", bg: "bg-pink-500/10", border: "border-pink-500/25", glow: "shadow-pink-500/20" },
@@ -45,13 +44,10 @@ interface MobileFlipCardProps {
     idea: IdeaForFlip;
 }
 
-/**
- * Framer-style flip card for mobile marketplace: tap to flip front/back.
- */
 export default function MobileFlipCard({ idea }: MobileFlipCardProps) {
     const { user } = useAuth();
     const router = useRouter();
-    const [isFlipped, setIsFlipped] = useState(false);
+    const [expanded, setExpanded] = useState(false);
     const meta = catMeta[idea.category] || catMeta.Tech;
 
     const scoreColor = idea.voteScore > 0 ? "text-emerald-400" : idea.voteScore < 0 ? "text-red-400" : "text-theme-muted";
@@ -71,116 +67,87 @@ export default function MobileFlipCard({ idea }: MobileFlipCardProps) {
     };
 
     return (
-        <div
-            className={`mobile-flip-card h-[320px] sm:h-[360px] touch-manipulation ${isFlipped ? "mobile-flip-card--flipped" : ""}`}
-            style={{ perspective: "1000px" }}
-            onClick={() => setIsFlipped((f) => !f)}
-        >
-            <div className="flip-card-container relative w-full h-full" style={{ transformStyle: "preserve-3d" }}>
-                {/* ═══ FRONT ═══ */}
-                <div className="flip-card-front absolute inset-0 rounded-3xl overflow-hidden" style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}>
-                    <div className={`relative w-full h-full rounded-3xl border ${meta.border} bg-[var(--card-bg)] shadow-xl ${meta.glow}`}>
-                        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-500" />
-                        <div className="relative z-10 flex flex-col h-full p-5">
-                            <div className="flex items-center justify-between mb-3">
-                                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl ${meta.bg} border ${meta.border} ${meta.color} text-[9px] font-black uppercase tracking-[0.2em]`}>
-                                    {catIcon[idea.category] ?? null}
-                                    {idea.category}
-                                </span>
-                                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-[10px] font-black text-white">
-                                    {idea.userId.name.charAt(0).toUpperCase()}
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl bg-[var(--input-bg)] border border-[var(--card-border)]">
-                                <div className="relative w-9 h-9 flex-shrink-0">
-                                    <svg className="w-9 h-9 -rotate-90" viewBox="0 0 36 36">
-                                        <circle cx="18" cy="18" r="14" fill="none" stroke="var(--border-color)" strokeWidth="2.5" />
-                                        <circle cx="18" cy="18" r="14" fill="none"
-                                            stroke={idea.validationScore >= 70 ? "#34d399" : idea.validationScore >= 40 ? "#fbbf24" : "#fb923c"}
-                                            strokeWidth="2.5" strokeLinecap="round"
-                                            strokeDasharray={`${(idea.validationScore / 100) * 88} 88`}
-                                        />
-                                    </svg>
-                                    <span className={`absolute inset-0 flex items-center justify-center text-[10px] font-black ${idea.validationScore >= 70 ? "text-emerald-400" : idea.validationScore >= 40 ? "text-yellow-400" : "text-orange-400"}`}>
-                                        {idea.validationScore}
-                                    </span>
-                                </div>
-                                <span className="text-[8px] font-bold text-theme-muted uppercase">Trust</span>
-                                <div className="ml-auto flex items-center gap-1.5">
-                                    <span className={`text-xs font-bold ${scoreColor}`}>{scoreSign}{idea.voteScore}</span>
-                                    <span className="text-theme-muted text-xs">·</span>
-                                    <span className="text-xs font-bold text-theme-muted">{idea.commentCount || 0}</span>
-                                </div>
-                            </div>
-                            <h3 className="text-lg font-black text-theme-primary tracking-tight leading-snug line-clamp-2 mb-auto">
-                                {idea.title}
-                            </h3>
-                            <p className="text-theme-muted text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 pt-3 border-t border-[var(--border-color)]">
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                                Tap to flip
-                            </p>
-                        </div>
+        <div className={`relative rounded-3xl overflow-hidden border bg-[var(--card-bg)] shadow-xl transition-shadow min-h-[320px] sm:min-h-[360px] flex flex-col ${meta.border} ${meta.glow}`}>
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-500 z-10" />
+            <div className="relative z-10 flex flex-col h-full p-5">
+                <div className="flex items-center justify-between mb-3">
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl ${meta.bg} border ${meta.border} ${meta.color} text-[9px] font-black uppercase tracking-[0.2em]`}>
+                        {catIcon[idea.category] ?? null}
+                        {idea.category}
+                    </span>
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-[10px] font-black text-white shrink-0">
+                        {idea.userId.name.charAt(0).toUpperCase()}
                     </div>
                 </div>
 
-                {/* ═══ BACK ═══ */}
-                <div
-                    className="flip-card-back absolute inset-0 rounded-3xl overflow-hidden"
-                    style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
-                >
-                    <div className={`relative w-full h-full rounded-3xl border ${meta.border} bg-[var(--card-bg)] shadow-2xl ${meta.glow}`}>
-                        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-cyan-500 via-indigo-500 to-violet-500" />
-                        <div className="relative z-10 flex flex-col h-full p-5" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-between mb-2">
-                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${meta.bg} ${meta.color} text-[8px] font-black uppercase`}>
-                                    {idea.category}
-                                </span>
-                                <button
-                                    type="button"
-                                    className="text-[9px] font-bold text-theme-muted uppercase"
-                                    onClick={() => setIsFlipped(false)}
-                                >
-                                    Back
-                                </button>
-                            </div>
-                            <h3 className="text-base font-black text-theme-primary leading-snug line-clamp-2 mb-2">
-                                {idea.title}
-                            </h3>
-                            <div className="flex-1 overflow-y-auto scrollbar-hide text-theme-secondary text-sm leading-relaxed mb-3">
-                                <p>{idea.summary}</p>
-                            </div>
-                            <div className="flex items-center gap-2 py-2 px-3 rounded-xl bg-[var(--input-bg)] border border-[var(--card-border)] mb-3">
-                                <span className={`text-sm font-black ${scoreColor}`}>{scoreSign}{idea.voteScore}</span>
-                                <span className="text-xs text-theme-muted">{idea.commentCount || 0} comments</span>
-                                <div className="flex-1" />
-                                <VoteButtons ideaId={idea._id} initialScore={idea.voteScore} initialStatus={idea.userVote ?? null} layout="horizontal" compact />
-                            </div>
-                            <div className="flex items-center gap-2">
-                                {user && user.id !== idea.userId._id && (
-                                    <button
-                                        type="button"
-                                        onClick={handleMessage}
-                                        className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                        </svg>
-                                    </button>
-                                )}
-                                <Link
-                                    href={`/ideas/${idea._id}`}
-                                    className="flex-1 inline-flex items-center justify-center gap-1.5 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    View Details
-                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                    </svg>
-                                </Link>
-                            </div>
-                        </div>
+                <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl bg-[var(--input-bg)] border border-[var(--card-border)]">
+                    <div className="relative w-9 h-9 shrink-0">
+                        <svg className="w-9 h-9 -rotate-90" viewBox="0 0 36 36">
+                            <circle cx="18" cy="18" r="14" fill="none" stroke="var(--border-color)" strokeWidth="2.5" />
+                            <circle cx="18" cy="18" r="14" fill="none"
+                                stroke={idea.validationScore >= 70 ? "#34d399" : idea.validationScore >= 40 ? "#fbbf24" : "#fb923c"}
+                                strokeWidth="2.5" strokeLinecap="round"
+                                strokeDasharray={`${(idea.validationScore / 100) * 88} 88`}
+                            />
+                        </svg>
+                        <span className={`absolute inset-0 flex items-center justify-center text-[10px] font-black ${idea.validationScore >= 70 ? "text-emerald-400" : idea.validationScore >= 40 ? "text-yellow-400" : "text-orange-400"}`}>
+                            {idea.validationScore}
+                        </span>
+                    </div>
+                    <span className="text-[8px] font-bold text-theme-muted uppercase">Trust</span>
+                    <div className="ml-auto flex items-center gap-1.5">
+                        <span className={`text-xs font-bold ${scoreColor}`}>{scoreSign}{idea.voteScore}</span>
+                        <span className="text-theme-muted text-xs">·</span>
+                        <span className="text-xs font-bold text-theme-muted">{idea.commentCount || 0} comments</span>
+                    </div>
+                </div>
+
+                <h3 className="text-lg font-black text-theme-primary tracking-tight leading-snug line-clamp-2 mb-2">
+                    {idea.title}
+                </h3>
+
+                <p className={`text-theme-secondary text-sm leading-relaxed mb-3 ${expanded ? "line-clamp-none" : "line-clamp-2"}`}>
+                    {idea.summary}
+                </p>
+
+                <div className="mt-auto pt-3 border-t border-[var(--border-color)] space-y-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <VoteButtons
+                            ideaId={idea._id}
+                            initialScore={idea.voteScore}
+                            initialStatus={idea.userVote ?? null}
+                            layout="horizontal"
+                            compact
+                        />
+                        <span className="text-xs font-bold text-theme-muted">{idea.commentCount || 0} comments</span>
+                        <button
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setExpanded((v) => !v); }}
+                            className="text-xs font-bold text-violet-400 hover:text-violet-300"
+                        >
+                            {expanded ? "Show less" : "View more"}
+                        </button>
+                        {expanded && user && user.id !== idea.userId._id && (
+                            <button
+                                type="button"
+                                onClick={handleMessage}
+                                className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 shrink-0"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                            </button>
+                        )}
+                        <Link
+                            href={`/ideas/${idea._id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold"
+                        >
+                            View Details
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                        </Link>
                     </div>
                 </div>
             </div>

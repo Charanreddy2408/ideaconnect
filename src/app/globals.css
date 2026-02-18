@@ -769,6 +769,9 @@ html {
 .idea-card:hover .flip-card-container {
   transform: rotateY(180deg);
 }
+.idea-card--no-flip:hover .flip-card-container {
+  transform: none;
+}
 
 .flip-card-front,
 .flip-card-back {

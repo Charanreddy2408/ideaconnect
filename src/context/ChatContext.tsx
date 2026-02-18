@@ -20,10 +20,15 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     const [notifications, setNotifications] = useState<Record<string, number>>({});
 
     useEffect(() => {
-        if (user) {
-            // Socket.io automatically uses the current host/port if not specified
-            const newSocket = io({
+        if (!user) return;
+
+        const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
+        const isCrossOrigin = Boolean(socketUrl);
+
+        const connect = (tokenForAuth?: string) => {
+            const newSocket = io(socketUrl || undefined, {
                 withCredentials: true,
+                ...(isCrossOrigin && tokenForAuth ? { auth: { token: tokenForAuth } } : {}),
             });
 
             newSocket.on("connect", () => {
@@ -37,7 +42,6 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
             });
 
             newSocket.on("new_message", (message) => {
-                // If the user is NOT on the chat page or in this specific conversation, record a notification
                 if (typeof window !== "undefined") {
                     const path = window.location.pathname;
                     if (!path.includes(`/messages`) || !path.includes(message.conversationId)) {
@@ -50,11 +54,27 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
             });
 
             setSocket(newSocket);
+            return newSocket;
+        };
 
-            return () => {
-                newSocket.close();
-            };
+        let socketInstance: Socket | null = null;
+
+        if (isCrossOrigin) {
+            fetch("/api/auth/socket-token")
+                .then((res) => (res.ok ? res.json() : Promise.reject(new Error("Not authenticated"))))
+                .then((data) => {
+                    socketInstance = connect(data.token);
+                })
+                .catch(() => {
+                    // No token; socket will not connect (user may have logged out)
+                });
+        } else {
+            socketInstance = connect();
         }
+
+        return () => {
+            if (socketInstance) socketInstance.close();
+        };
     }, [user]);
 
     const clearNotifications = useCallback((conversationId: string) => {

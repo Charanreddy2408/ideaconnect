@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useRef, type ReactElement } from "react";
 import IdeaCard from "@/components/IdeaCard";
-import DesktopCardStack from "@/components/DesktopCardStack";
-import MobileFlipCard from "@/components/MobileFlipCard";
+import TinderStack from "@/components/TinderStack";
 import Modal from "@/components/Modal";
 import CreateIdeaForm from "@/components/CreateIdeaForm";
 import { useAuth } from "@/context/AuthContext";
@@ -51,7 +50,6 @@ export default function IdeasPage() {
     const [sort, setSort] = useState("recent");
     const [category, setCategory] = useState("");
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [desktopViewMode, setDesktopViewMode] = useState<"grid" | "stack">("grid");
     const pageRef = useRef<HTMLDivElement>(null);
     const gridRef = useRef<HTMLDivElement>(null);
     const headerAnimated = useRef(false);
@@ -183,39 +181,6 @@ export default function IdeasPage() {
                     </select>
                 </div>
 
-                {/* Desktop view toggle: Grid vs Stack (lg only) */}
-                <div className="hidden lg:flex items-center gap-2">
-                    <span className="text-[9px] font-bold text-theme-muted uppercase tracking-wider mr-1">View:</span>
-                    <button
-                        type="button"
-                        onClick={() => setDesktopViewMode("grid")}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-2 ${
-                            desktopViewMode === "grid"
-                                ? "bg-violet-500/20 text-violet-400 border border-violet-500/30"
-                                : "bg-[var(--input-bg)] border border-[var(--input-border)] text-theme-secondary hover:text-theme-primary hover:border-violet-500/20"
-                        }`}
-                    >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                        </svg>
-                        Grid
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setDesktopViewMode("stack")}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-2 ${
-                            desktopViewMode === "stack"
-                                ? "bg-violet-500/20 text-violet-400 border border-violet-500/30"
-                                : "bg-[var(--input-bg)] border border-[var(--input-border)] text-theme-secondary hover:text-theme-primary hover:border-violet-500/20"
-                        }`}
-                    >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
-                        Stack
-                    </button>
-                </div>
-
                 {/* Category Pills */}
                 <div className="flex flex-wrap gap-2">
                     {categories.map((cat) => (
@@ -254,25 +219,13 @@ export default function IdeasPage() {
                 </>
             ) : ideas.length > 0 ? (
                 <>
-                    {/* ===== DESKTOP: Grid or Stack (lg and up) ===== */}
-                    {desktopViewMode === "grid" && (
-                        <div ref={gridRef} className="hidden lg:grid grid-cols-2 xl:grid-cols-3 gap-6">
-                            {ideas.map((idea: any) => (
-                                <IdeaCard key={idea._id} idea={idea} />
-                            ))}
-                        </div>
-                    )}
-                    {desktopViewMode === "stack" && (
-                        <div className="hidden lg:block">
-                            <DesktopCardStack ideas={ideas as any} />
-                        </div>
-                    )}
-
-                    {/* ===== MOBILE/TABLET: Flip cards — tap to flip (below lg) ===== */}
-                    <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                        {(ideas as any[]).map((idea: any) => (
-                            <MobileFlipCard key={idea._id} idea={idea} />
+                    <div ref={gridRef} className="hidden lg:grid grid-cols-2 xl:grid-cols-3 gap-6 items-start">
+                        {ideas.map((idea: any) => (
+                            <IdeaCard key={idea._id} idea={idea} />
                         ))}
+                    </div>
+                    <div className="lg:hidden">
+                        <TinderStack ideas={ideas as any} />
                     </div>
                 </>
             ) : (

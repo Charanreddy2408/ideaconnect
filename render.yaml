@@ -1,0 +1,21 @@
+# Render Blueprint: deploy socket server as a separate Web Service.
+# Add your main Next.js app as a second service in the dashboard if needed.
+
+services:
+  - type: web
+    name: ideaconnect-socket
+    runtime: node
+    rootDir: socket-server
+
+    buildCommand: npm install
+    startCommand: npm start
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        generateValue: true
+      # Set these in Render dashboard (Environment) - do not commit secrets:
+      # - MONGODB_URI
+      # - JWT_SECRET  (must match your main app)
+      # - CORS_ORIGIN (e.g. https://ideaconnect-xxxx.onrender.com)
