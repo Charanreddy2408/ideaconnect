@@ -35,9 +35,11 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
         }
 
+        const jwtSecret = process.env.JWT_SECRET;
+        if (!jwtSecret) throw new Error("JWT_SECRET is not set");
         const token = jwt.sign(
             { userId: user._id, email: user.email },
-            process.env.JWT_SECRET!,
+            jwtSecret,
             { expiresIn: "1d" }
         );
 
@@ -59,8 +61,15 @@ export async function POST(req: Request) {
         });
 
         return response;
-    } catch (error) {
+    } catch (error: unknown) {
         console.error("Login error:", error);
+        const message = error instanceof Error ? error.message : "";
+        if (message.includes("MONGODB_URI") || message.includes("JWT_SECRET")) {
+            return NextResponse.json(
+                { error: "Server configuration error. Check environment variables (MONGODB_URI, JWT_SECRET) in Vercel." },
+                { status: 503 }
+            );
+        }
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

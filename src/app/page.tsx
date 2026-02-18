@@ -17,15 +17,11 @@ const HeroScene = dynamic(() => import("@/components/HeroScene"), {
     loading: () => null,
 });
 
-/* ═══════ Helpers ═══════ */
-function splitChars(text: string, className: string) {
-    return text.split("").map((ch, i) => (
-        <span
-            key={i}
-            className={`${className} inline-block`}
-            style={ch === " " ? { width: "0.3em" } : undefined}
-        >
-            {ch === " " ? "\u00A0" : ch}
+/* ═══════ Helpers — word-based for fewer DOM nodes and smoother animation ═══════ */
+function splitWords(text: string, className: string) {
+    return text.split(" ").map((word, i) => (
+        <span key={i} className={`${className} inline-block mr-[0.25em]`}>
+            {word}
         </span>
     ));
 }
@@ -109,9 +105,9 @@ export default function Home() {
     useEffect(() => {
         if (!mainRef.current) return;
 
-        /* ═══ Lenis Smooth Scroll ═══ */
+        /* ═══ Lenis Smooth Scroll — tuned for responsiveness ═══ */
         const lenis = new Lenis({
-            duration: 1.4,
+            duration: 1.15,
             easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
             smoothWheel: true,
         });
@@ -119,24 +115,29 @@ export default function Home() {
         gsap.ticker.add((time) => lenis.raf(time * 1000));
         gsap.ticker.lagSmoothing(0);
 
-        /* ═══ Custom Cursor ═══ */
+        /* ═══ Custom Cursor — throttled for smoother main thread ═══ */
         const cursor = cursorRef.current!;
         const cursorDot = cursorDotRef.current!;
         let cx = 0, cy = 0, dx = 0, dy = 0;
+        let rafId = 0;
 
         const onMouseMove = (e: MouseEvent) => {
             cx = e.clientX;
             cy = e.clientY;
-            gsap.to(cursorDot, { x: cx, y: cy, duration: 0.1, ease: "power2.out" });
         };
-        window.addEventListener("mousemove", onMouseMove);
+        window.addEventListener("mousemove", onMouseMove, { passive: true });
 
         const cursorTick = () => {
-            dx += (cx - dx) * 0.12;
-            dy += (cy - dy) * 0.12;
-            gsap.set(cursor, { x: dx, y: dy });
+            dx += (cx - dx) * 0.18;
+            dy += (cy - dy) * 0.18;
+            cursorDot.style.transform = `translate(${cx}px, ${cy}px)`;
+            cursor.style.transform = `translate(${dx}px, ${dy}px)`;
         };
-        gsap.ticker.add(cursorTick);
+        const cursorLoop = () => {
+            cursorTick();
+            rafId = requestAnimationFrame(cursorLoop);
+        };
+        rafId = requestAnimationFrame(cursorLoop);
 
         const hoverEls = mainRef.current.querySelectorAll("a, button, .magnetic");
         hoverEls.forEach((el) => {
@@ -164,23 +165,7 @@ export default function Home() {
                 },
             });
 
-            /* ── Velocity Skew ── */
-            const skewProxy = { skew: 0 };
-            const skewSetter = gsap.quickSetter(".skew-on-scroll", "skewY", "deg");
-            const skewClamp = gsap.utils.clamp(-2, 2);
-            ScrollTrigger.create({
-                onUpdate(self) {
-                    const v = self.getVelocity();
-                    const skew = skewClamp(v / -300);
-                    if (Math.abs(skew) > Math.abs(skewProxy.skew)) {
-                        skewProxy.skew = skew;
-                        gsap.to(skewProxy, {
-                            skew: 0, duration: 0.8, ease: "power3.out", overwrite: true,
-                            onUpdate: () => skewSetter(skewProxy.skew),
-                        });
-                    }
-                },
-            });
+            /* ── Velocity skew removed for smoother scroll performance ── */
 
             /* ═══════════════════════════════════════════
                HERO — character-level entrance + parallax
@@ -193,14 +178,14 @@ export default function Home() {
             // Badge
             heroTl.from(".hero-badge", { y: 30, opacity: 0, duration: 0.8 }, 0.2);
 
-            // Character-by-character reveal for title
+            // Word-by-word reveal for title (lighter than char-by-char)
             heroTl.from(".hero-char", {
-                y: 80,
-                rotateX: -90,
+                y: 60,
+                rotateX: -45,
                 opacity: 0,
-                stagger: 0.02,
-                duration: 1,
-                ease: "back.out(1.7)",
+                stagger: 0.06,
+                duration: 0.9,
+                ease: "back.out(1.5)",
             }, 0.3);
 
             // Description blur-in
@@ -218,8 +203,7 @@ export default function Home() {
 
             // Hero illustrations: staggered float-in + subtle scale
             heroTl.from(".hero-img-wrap", { y: 60, opacity: 0, scale: 0.9, stagger: 0.15, duration: 1, ease: "power3.out" }, 0.7);
-            // Gentle floating loop (run after entrance)
-            gsap.to(".hero-img-float", { y: -14, duration: 2.2, ease: "sine.inOut", repeat: -1, yoyo: true, stagger: { each: 0.4 } });
+            // Float animation handled by CSS for better performance
 
             // Hero images scroll parallax (move at different speeds)
             gsap.to(".hero-img-left", { y: -80, ease: "none", scrollTrigger: { trigger: "#hero", start: "top top", end: "bottom top", scrub: 1.2 } });
@@ -252,16 +236,7 @@ export default function Home() {
                 const w1 = mTrack1.scrollWidth / 4;
                 gsap.to(mTrack1, { x: -w1, ease: "none", repeat: -1, duration: 24 });
             }
-            ScrollTrigger.create({
-                id: "marquee-skew",
-                trigger: "#marquee-section",
-                start: "top bottom",
-                end: "bottom top",
-                onUpdate(self) {
-                    const v = self.getVelocity() / 500;
-                    gsap.to("#marquee-1", { skewX: gsap.utils.clamp(-5, 5, v), duration: 0.5, overwrite: true });
-                },
-            });
+            // Marquee skew removed for smoother performance
 
             /* ═══════════════════════════════════════════
                FEATURES — horizontal pinned gallery with 3D card tilt
@@ -274,6 +249,7 @@ export default function Home() {
                 gsap.to(hPanel, {
                     x: -totalWidth, ease: "none",
                     scrollTrigger: {
+                        id: "hScroll",
                         trigger: "#features",
                         start: "top top",
                         end: () => `+=${totalWidth}`,
@@ -284,6 +260,7 @@ export default function Home() {
                 });
 
                 // 3D tilt: cards rotate as they enter/leave view
+                const hScrollTrigger = ScrollTrigger.getById("hScroll");
                 gsap.utils.toArray<HTMLElement>(".feat-card").forEach((card, i) => {
                     gsap.fromTo(card, {
                         rotateY: 15, scale: 0.9, opacity: 0.5,
@@ -291,7 +268,7 @@ export default function Home() {
                         rotateY: 0, scale: 1, opacity: 1,
                         scrollTrigger: {
                             trigger: card,
-                            containerAnimation: gsap.getById?.("hScroll") || undefined,
+                            containerAnimation: hScrollTrigger ?? undefined,
                             start: "left 90%", end: "left 50%", scrub: 1,
                         },
                     });
@@ -495,7 +472,7 @@ export default function Home() {
             mm.revert();
             lenis.destroy();
             window.removeEventListener("mousemove", onMouseMove);
-            gsap.ticker.remove(cursorTick);
+            cancelAnimationFrame(rafId);
         };
     }, []);
 
@@ -541,15 +518,15 @@ export default function Home() {
 
                     <h1 className="hero-title text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-black tracking-[-0.04em] leading-[1] hero-text-adaptive">
                         <span className="block overflow-hidden">
-                            {splitChars("Where Ideas", "hero-char")}
+                            {splitWords("Where Ideas", "hero-char")}
                         </span>
                         <span className="block overflow-hidden">
-                            {splitChars("Find Their", "hero-char")}
+                            {splitWords("Find Their", "hero-char")}
                         </span>
                         <span className="block overflow-hidden text-gradient">
-                            {splitChars("Partners.", "hero-char")}
-                            </span>
-                            </h1>
+                            {splitWords("Partners.", "hero-char")}
+                        </span>
+                    </h1>
 
                     <p className="hero-desc text-base sm:text-lg hero-text-dim max-w-lg leading-relaxed font-medium mx-auto">
                         The ultimate ecosystem where visionary founders and elite builders unite to create world-changing products.
@@ -583,7 +560,7 @@ export default function Home() {
                     {/* Hero character illustrations — idea + thinking */}
                     <div className="hero-visuals flex flex-wrap items-end justify-center gap-8 sm:gap-12 lg:gap-16 mt-10 sm:mt-14 lg:mt-16 max-w-5xl mx-auto">
                         <div className="hero-img-wrap hero-img-left w-[140px] sm:w-[180px] lg:w-[220px] flex-shrink-0">
-                            <div className="hero-img-float relative aspect-square rounded-3xl overflow-hidden border-2 border-violet-500/20 bg-white/5 shadow-2xl shadow-violet-500/10 backdrop-blur-sm">
+                            <div className="hero-img-float relative aspect-square rounded-3xl overflow-hidden border-2 border-violet-500/20 bg-white/5 shadow-2xl shadow-violet-500/10 backdrop-blur-sm animate-float-subtle">
                                 <HeroImage src="/images/hero-idea.webp" alt="Lightbulb moment — where ideas spark" className="absolute inset-0 w-full h-full object-contain p-2" />
                             </div>
                             <p className="text-center mt-3 text-[10px] font-bold text-theme-muted uppercase tracking-widest">Idea</p>
@@ -594,7 +571,7 @@ export default function Home() {
                             </div>
                         </div>
                         <div className="hero-img-wrap hero-img-right w-[140px] sm:w-[180px] lg:w-[220px] flex-shrink-0">
-                            <div className="hero-img-float relative aspect-square rounded-3xl overflow-hidden border-2 border-indigo-500/20 bg-white/5 shadow-2xl shadow-indigo-500/10 backdrop-blur-sm">
+                            <div className="hero-img-float relative aspect-square rounded-3xl overflow-hidden border-2 border-indigo-500/20 bg-white/5 shadow-2xl shadow-indigo-500/10 backdrop-blur-sm animate-float-subtle" style={{ animationDelay: "0.4s" }}>
                                 <HeroImage src="/images/hero-thinking.webp" alt="Think it through — brainstorm and connect" className="absolute inset-0 w-full h-full object-contain p-2" />
                             </div>
                             <p className="text-center mt-3 text-[10px] font-bold text-theme-muted uppercase tracking-widest">Connect</p>

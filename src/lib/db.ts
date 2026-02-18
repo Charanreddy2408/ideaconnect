@@ -6,10 +6,13 @@ declare global {
     } | undefined;
 }
 
-const MONGODB_URI = process.env.MONGODB_URI!;
-
-if (!MONGODB_URI) {
-    throw new Error("Please add your Mongo URI to .env.local");
+// Check at runtime so Vercel/serverless can fail gracefully if env is missing
+function getMongoUri(): string {
+    const uri = process.env.MONGODB_URI;
+    if (!uri) {
+        throw new Error("MONGODB_URI is not set. Add it in Vercel → Project → Settings → Environment Variables.");
+    }
+    return uri;
 }
 
 const cached: { conn: any; promise: Promise<any> | null } = global.mongoose || { conn: null, promise: null };
@@ -23,8 +26,9 @@ export async function connectDB() {
         return cached.conn;
     }
 
+    const uri = getMongoUri();
     if (!cached.promise) {
-        cached.promise = mongoose.connect(MONGODB_URI, {
+        cached.promise = mongoose.connect(uri, {
             bufferCommands: false,
         });
     }

@@ -71,10 +71,10 @@ function FloatingObject({ position, geometry, color, size, rotSpeed, floatSpeed,
     const geo = useMemo(() => {
         switch (geometry) {
             case "icosa": return <icosahedronGeometry args={[size, 0]} />;
-            case "torus": return <torusGeometry args={[size, size * 0.35, 16, 32]} />;
+            case "torus": return <torusGeometry args={[size, size * 0.35, 12, 24]} />;
             case "box": return <boxGeometry args={[size, size, size]} />;
             case "octahedron": return <octahedronGeometry args={[size, 0]} />;
-            case "torusKnot": return <torusKnotGeometry args={[size * 0.7, size * 0.2, 64, 16]} />;
+            case "torusKnot": return <torusKnotGeometry args={[size * 0.7, size * 0.2, 32, 8]} />;
         }
     }, [geometry, size]);
 
@@ -119,7 +119,7 @@ function GlowRing({ position, radius, color, tilt, speed }: {
 
     return (
         <mesh ref={ref} position={position} rotation={tilt}>
-            <torusGeometry args={[radius, 0.015, 16, 100]} />
+            <torusGeometry args={[radius, 0.015, 12, 64]} />
             <meshStandardMaterial
                 color={color}
                 emissive={color}
@@ -170,7 +170,7 @@ function LightBeam({ position, height, color, width }: {
    PARTICLE FIELD — dense floating dust
    ═══════════════════════════════════════════════════════ */
 function ParticleField() {
-    const count = 600;
+    const count = 280;
     const ref = useRef<THREE.Points>(null!);
 
     const { positions, colors } = useMemo(() => {
@@ -225,7 +225,7 @@ function ParticleField() {
    SPEED LINES — streaks that intensify with scroll
    ═══════════════════════════════════════════════════════ */
 function SpeedLines({ scrollProgress }: { scrollProgress: React.MutableRefObject<number> }) {
-    const count = 120;
+    const count = 60;
     const ref = useRef<THREE.Points>(null!);
     const basePositions = useRef<Float32Array>(new Float32Array(count * 3));
 
@@ -308,29 +308,15 @@ function CameraController({ scrollProgress }: SceneProps) {
    SCENE — the 3D world
    ═══════════════════════════════════════════════════════ */
 function Scene({ scrollProgress }: SceneProps) {
-    // Scattered objects throughout the scene
+    // Scattered objects — reduced count for smoother performance
     const objects: FloatObjProps[] = useMemo(() => [
-        // Near camera start — visible immediately
         { position: [-2.5, 0.5, 6], geometry: "icosa", color: "#6366f1", size: 0.5, rotSpeed: [0.003, 0.005, 0.002], floatSpeed: 0.6, floatAmp: 0.3 },
         { position: [3, 1.5, 5], geometry: "torus", color: "#a855f7", size: 0.4, rotSpeed: [0.002, 0.004, 0.001], floatSpeed: 0.5, floatAmp: 0.2 },
-        { position: [1, -0.5, 3], geometry: "octahedron", color: "#06b6d4", size: 0.35, rotSpeed: [0.004, 0.003, 0.005], floatSpeed: 0.7, floatAmp: 0.25 },
-
-        // Mid section
         { position: [-4, 2, 0], geometry: "torusKnot", color: "#818cf8", size: 0.5, rotSpeed: [0.002, 0.003, 0.001], floatSpeed: 0.4, floatAmp: 0.35 },
-        { position: [3.5, -1, -2], geometry: "box", color: "#c084fc", size: 0.45, rotSpeed: [0.005, 0.002, 0.004], floatSpeed: 0.55, floatAmp: 0.2 },
-        { position: [-1, 3, -3], geometry: "icosa", color: "#6366f1", size: 0.6, rotSpeed: [0.003, 0.004, 0.002], floatSpeed: 0.35, floatAmp: 0.4 },
         { position: [2, 0, -5], geometry: "torus", color: "#a855f7", size: 0.55, rotSpeed: [0.001, 0.005, 0.003], floatSpeed: 0.6, floatAmp: 0.3 },
-
-        // Deep section
         { position: [-3, 1, -7], geometry: "octahedron", color: "#06b6d4", size: 0.5, rotSpeed: [0.004, 0.002, 0.003], floatSpeed: 0.5, floatAmp: 0.25 },
-        { position: [4, 2, -9], geometry: "torusKnot", color: "#818cf8", size: 0.45, rotSpeed: [0.002, 0.004, 0.001], floatSpeed: 0.45, floatAmp: 0.3 },
         { position: [0, -1, -10], geometry: "box", color: "#c084fc", size: 0.6, rotSpeed: [0.003, 0.001, 0.005], floatSpeed: 0.5, floatAmp: 0.2 },
-        { position: [-2, 2.5, -11], geometry: "icosa", color: "#6366f1", size: 0.4, rotSpeed: [0.005, 0.003, 0.002], floatSpeed: 0.6, floatAmp: 0.35 },
-
-        // Far section
         { position: [3, 0.5, -13], geometry: "torus", color: "#a855f7", size: 0.5, rotSpeed: [0.002, 0.005, 0.004], floatSpeed: 0.4, floatAmp: 0.3 },
-        { position: [-1, 1.5, -15], geometry: "torusKnot", color: "#06b6d4", size: 0.55, rotSpeed: [0.003, 0.002, 0.001], floatSpeed: 0.55, floatAmp: 0.25 },
-        { position: [2, 3, -16], geometry: "octahedron", color: "#818cf8", size: 0.35, rotSpeed: [0.004, 0.001, 0.005], floatSpeed: 0.65, floatAmp: 0.2 },
         { position: [-3, 0, -18], geometry: "icosa", color: "#c084fc", size: 0.5, rotSpeed: [0.001, 0.004, 0.003], floatSpeed: 0.5, floatAmp: 0.4 },
     ], []);
 
@@ -353,7 +339,7 @@ function Scene({ scrollProgress }: SceneProps) {
             <pointLight position={[4, 3, -14]} intensity={0.8} color="#818cf8" distance={15} />
 
             {/* Stars background */}
-            <Stars radius={50} depth={50} count={3000} factor={3} saturation={0.3} fade speed={0.3} />
+            <Stars radius={50} depth={50} count={1200} factor={2.5} saturation={0.25} fade speed={0.2} />
 
             {/* Floating geometric objects */}
             {objects.map((obj, i) => (
@@ -396,12 +382,12 @@ function PostProcessing() {
     }, [gl]);
     if (!ready) return null;
     return (
-        <EffectComposer multisampling={4}>
+        <EffectComposer multisampling={0}>
             <Bloom
-                luminanceThreshold={0.15}
-                luminanceSmoothing={0.9}
-                height={300}
-                intensity={1.5}
+                luminanceThreshold={0.2}
+                luminanceSmoothing={0.85}
+                height={180}
+                intensity={1.2}
             />
             <Vignette offset={0.3} darkness={0.7} />
         </EffectComposer>
@@ -415,6 +401,8 @@ const glConfig = {
     alpha: true,
     antialias: true,
     powerPreference: "high-performance" as const,
+    stencil: false,
+    depth: true,
 };
 
 export default function HeroScene({ scrollProgress }: { scrollProgress: React.MutableRefObject<number> }) {
@@ -439,7 +427,7 @@ export default function HeroScene({ scrollProgress }: { scrollProgress: React.Mu
         <div className="w-full h-full">
             <Canvas
                 gl={glConfig}
-                dpr={[1, 1.5]}
+                dpr={[1, 1.25]}
                 onCreated={({ gl }) => {
                     gl.setClearColor(0x050510, 1);
                     gl.toneMapping = THREE.ACESFilmicToneMapping;

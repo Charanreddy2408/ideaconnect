@@ -336,6 +336,14 @@ h1, h2, h3 {
   animation: floatSlow 8s ease-in-out infinite;
 }
 
+@keyframes float-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.animate-float-subtle {
+  animation: float-subtle 3s ease-in-out infinite;
+}
+
 .animate-pulse-glow {
   animation: pulse-glow 3s ease-in-out infinite;
 }
