@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/db";
 import Idea from "@/models/Idea";
 import Vote from "@/models/Vote";
 import { getAuthUserId } from "@/lib/auth";
-import { calculateValidationScore } from "@/utils/validationScore";
+import { generateAIReport } from "@/lib/aiReport";
 import { calculateSimilarity } from "@/utils/similarity";
 import { z } from "zod";
 
@@ -52,13 +52,32 @@ export async function POST(req: Request) {
             }
         }
 
-        const validationScore = calculateValidationScore(data);
+        let aiReport;
+        try {
+            aiReport = await generateAIReport({
+                title: data.title,
+                summary: data.summary,
+                problem: data.problem,
+                targetAudience: data.targetAudience,
+                revenueModel: data.revenueModel,
+                requiredSkills: data.requiredSkills || [],
+                category: data.category,
+                budget: data.budget,
+            });
+        } catch (aiError) {
+            const message = aiError instanceof Error ? aiError.message : "AI evaluation failed";
+            console.error("AI report error:", aiError);
+            return NextResponse.json(
+                { message: "AI evaluation failed. Idea not saved.", error: message },
+                { status: 502 }
+            );
+        }
 
         const newIdea = await Idea.create({
             ...data,
             requiredSkills: data.requiredSkills || [],
-            validationScore,
             userId,
+            aiReport,
         });
 
         return NextResponse.json(newIdea, { status: 201 });
@@ -86,7 +105,7 @@ export async function GET(req: Request) {
         const page = Math.max(1, parseInt(searchParams.get("page") || String(DEFAULT_PAGE), 10));
         const limit = Math.min(30, Math.max(1, parseInt(searchParams.get("limit") || String(DEFAULT_LIMIT), 10)));
 
-        const query: any = {};
+        const query: any = { aiReport: { $exists: true } };
 
         if (category) {
             query.category = category;
@@ -114,8 +133,6 @@ export async function GET(req: Request) {
             ideasQuery = ideasQuery.sort({ createdAt: -1 });
         } else if (sort === "popular") {
             ideasQuery = ideasQuery.sort({ voteScore: -1 });
-        } else if (sort === "validation") {
-            ideasQuery = ideasQuery.sort({ validationScore: -1 });
         } else {
             ideasQuery = ideasQuery.sort({ createdAt: -1 });
         }

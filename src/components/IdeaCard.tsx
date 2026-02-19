@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, type ReactElement } from "react";
 import { useAuth } from "@/context/AuthContext";
 import VoteButtons from "@/components/VoteButtons";
+import IdeaCardAiMetrics from "@/components/IdeaCardAiMetrics";
 
 interface IdeaCardProps {
     idea: {
@@ -13,13 +14,13 @@ interface IdeaCardProps {
         summary: string;
         category: string;
         voteScore: number;
-        validationScore: number;
         commentCount: number;
         userVote?: number | null;
         userId: {
             _id: string;
             name: string;
         };
+        aiReport?: import("./IdeaCardAiMetrics").AiReportForCard | null;
     };
 }
 
@@ -86,24 +87,7 @@ export default function IdeaCard({ idea }: IdeaCardProps) {
                     </div>
 
                     <div className="flex items-center gap-3 mb-4 px-4 py-3 rounded-2xl bg-[var(--input-bg)] border border-[var(--card-border)]">
-                        <div className="relative w-11 h-11 shrink-0">
-                            <svg className="w-11 h-11 -rotate-90" viewBox="0 0 44 44">
-                                <circle cx="22" cy="22" r="18" fill="none" stroke="var(--border-color)" strokeWidth="3" />
-                                <circle cx="22" cy="22" r="18" fill="none"
-                                    stroke={idea.validationScore >= 70 ? "#34d399" : idea.validationScore >= 40 ? "#fbbf24" : "#fb923c"}
-                                    strokeWidth="3" strokeLinecap="round"
-                                    strokeDasharray={`${(idea.validationScore / 100) * 113.1} 113.1`}
-                                />
-                            </svg>
-                            <span className={`absolute inset-0 flex items-center justify-center text-xs font-black tabular-nums ${idea.validationScore >= 70 ? "text-emerald-400" : idea.validationScore >= 40 ? "text-yellow-400" : "text-orange-400"}`}>
-                                {idea.validationScore}
-                            </span>
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-[8px] font-bold text-theme-muted uppercase tracking-[0.2em] leading-none">Validation</span>
-                            <span className="text-[8px] font-bold text-theme-muted uppercase tracking-[0.2em] leading-none mt-0.5">Score</span>
-                        </div>
-                        <div className="ml-auto flex items-center gap-3 text-theme-muted">
+                        <div className="flex items-center gap-3 text-theme-muted">
                             <div className="flex items-center gap-1">
                                 <svg className={`w-3.5 h-3.5 ${idea.voteScore >= 0 ? "text-emerald-400" : "text-red-400"}`} fill="currentColor" viewBox="0 0 24 24">
                                     {idea.voteScore >= 0 ? <path d="M12 4L4 12H9V20H15V12H20L12 4Z" /> : <path d="M12 20L20 12H15V4H9V12H4L12 20Z" />}
@@ -128,6 +112,12 @@ export default function IdeaCard({ idea }: IdeaCardProps) {
                     <p className={`text-theme-secondary text-sm leading-relaxed mb-4 ${expanded ? "" : "line-clamp-2"}`}>
                         {idea.summary}
                     </p>
+
+                    {expanded && idea.aiReport && (
+                        <div className="mb-4">
+                            <IdeaCardAiMetrics aiReport={idea.aiReport} />
+                        </div>
+                    )}
 
                     <div className="mt-auto pt-4 border-t border-[var(--border-color)] space-y-3">
                         <div className="flex items-center gap-3 flex-wrap">

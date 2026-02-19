@@ -148,32 +148,6 @@ export default function HorizontalCardScroll({ ideas }: HorizontalCardScrollProp
 
                                     {/* Stats row */}
                                     <div className="flex items-center gap-4 mb-4">
-                                        {/* Validation Score */}
-                                        <div className="flex items-center gap-2">
-                                            <div className="relative w-10 h-10">
-                                                <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
-                                                    <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" />
-                                                    <circle
-                                                        cx="18"
-                                                        cy="18"
-                                                        r="15"
-                                                        fill="none"
-                                                        stroke={idea.validationScore >= 70 ? '#34d399' : idea.validationScore >= 40 ? '#fbbf24' : '#fb923c'}
-                                                        strokeWidth="2.5"
-                                                        strokeLinecap="round"
-                                                        strokeDasharray={`${(idea.validationScore / 100) * 94.25} 94.25`}
-                                                    />
-                                                </svg>
-                                                <span className={`absolute inset-0 flex items-center justify-center text-[9px] font-black tabular-nums ${idea.validationScore >= 70 ? 'text-emerald-400' : idea.validationScore >= 40 ? 'text-yellow-400' : 'text-orange-400'}`}>
-                                                    {idea.validationScore}
-                                                </span>
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-[8px] font-bold text-white/60 uppercase tracking-wider leading-none">Trust</span>
-                                                <span className="text-[8px] font-bold text-white/60 uppercase tracking-wider leading-none mt-0.5">Score</span>
-                                            </div>
-                                        </div>
-
                                         {/* Vote Score */}
                                         <div className="flex items-center gap-1.5">
                                             <svg className={`w-4 h-4 ${scoreColor}`} fill="currentColor" viewBox="0 0 24 24">

@@ -254,12 +254,6 @@ export default function IdeaDetailPage() {
                             {icon}
                             {idea.category}
                         </span>
-                        <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-                            <div className={`w-2.5 h-2.5 rounded-full animate-pulse ${idea.validationScore >= 70 ? 'bg-emerald-400' : idea.validationScore >= 40 ? 'bg-yellow-400' : 'bg-orange-400'}`} />
-                            <span className={`text-[10px] font-black uppercase tracking-[0.25em] ${idea.validationScore >= 70 ? 'text-emerald-400' : idea.validationScore >= 40 ? 'text-yellow-400' : 'text-orange-400'}`}>
-                                {idea.validationScore}% Trust Score
-                            </span>
-                        </div>
                     </div>
 
                     {/* Title */}
@@ -331,7 +325,7 @@ export default function IdeaDetailPage() {
             {/* ═══════════════════════════════
                 STATS ROW
                ═══════════════════════════════ */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                 {/* Vote Score — big */}
                 <div className="detail-stat relative rounded-2xl border border-[var(--card-border)] overflow-hidden p-5 sm:p-6" style={{ background: 'var(--card-bg)' }}>
                     <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500" />
@@ -356,26 +350,6 @@ export default function IdeaDetailPage() {
                             initialStatus={idea.userVote ?? null}
                             layout="horizontal"
                             compact
-                        />
-                    </div>
-                </div>
-
-                {/* Trust Score */}
-                <div className="detail-stat relative rounded-2xl border border-[var(--card-border)] overflow-hidden p-5 sm:p-6" style={{ background: 'var(--card-bg)' }}>
-                    <div className={`absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r ${idea.validationScore >= 70 ? 'from-emerald-500 to-green-500' : idea.validationScore >= 40 ? 'from-yellow-500 to-amber-500' : 'from-orange-500 to-red-500'}`} />
-                    <div className="flex items-center gap-2 mb-2">
-                        <svg className="w-5 h-5 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                        <span className="text-[9px] font-bold text-theme-muted uppercase tracking-[0.2em]">Trust</span>
-                    </div>
-                    <div className="flex items-baseline gap-1">
-                        <span className={`text-3xl sm:text-4xl font-black tabular-nums ${idea.validationScore >= 70 ? 'text-emerald-400' : idea.validationScore >= 40 ? 'text-yellow-400' : 'text-orange-400'}`}>{idea.validationScore}</span>
-                        <span className="text-lg font-black text-theme-muted">%</span>
-                    </div>
-                    {/* Progress bar */}
-                    <div className="mt-3 h-1.5 rounded-full bg-[var(--border-color)] overflow-hidden">
-                        <div
-                            className={`h-full rounded-full transition-all duration-1000 bg-gradient-to-r ${idea.validationScore >= 70 ? 'from-emerald-500 to-green-400' : idea.validationScore >= 40 ? 'from-yellow-500 to-amber-400' : 'from-orange-500 to-red-400'}`}
-                            style={{ width: `${idea.validationScore}%` }}
                         />
                     </div>
                 </div>
@@ -470,6 +444,99 @@ export default function IdeaDetailPage() {
                             </div>
                         ) : null
                     ))}
+
+                    {/* AI Report */}
+                    {idea.aiReport && (
+                        <div className="detail-section">
+                            <div className="rounded-2xl border border-[var(--card-border)] overflow-hidden" style={{ background: 'var(--card-bg)' }}>
+                                <div className="flex items-center gap-3 px-6 sm:px-8 py-4 border-b border-[var(--border-color)]" style={{ background: 'var(--input-bg)' }}>
+                                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white shadow-lg">
+                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                                    </div>
+                                    <h2 className="text-base sm:text-lg font-black text-theme-primary">AI Evaluation</h2>
+                                    <span className={`ml-auto px-3 py-1 rounded-xl text-xs font-bold uppercase ${
+                                        idea.aiReport.competitionRisk === "Low" ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30" :
+                                        idea.aiReport.competitionRisk === "Medium" ? "bg-amber-500/15 text-amber-400 border border-amber-500/30" :
+                                        "bg-red-500/15 text-red-400 border border-red-500/30"
+                                    }`}>
+                                        Risk: {idea.aiReport.competitionRisk}
+                                    </span>
+                                </div>
+                                <div className="px-6 sm:px-8 py-6 sm:py-8 space-y-6">
+                                    {/* Scores grid */}
+                                    <div>
+                                        <h3 className="text-[10px] font-bold text-theme-muted uppercase tracking-[0.2em] mb-3">Scores (0–100)</h3>
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                            {[
+                                                { label: "Problem clarity", value: idea.aiReport.problemClarity },
+                                                { label: "Audience", value: idea.aiReport.audienceScore },
+                                                { label: "Monetization", value: idea.aiReport.monetizationScore },
+                                                { label: "Innovation", value: idea.aiReport.innovationScore },
+                                                { label: "Feasibility", value: idea.aiReport.feasibilityScore },
+                                                { label: "Scalability", value: idea.aiReport.scalabilityScore },
+                                                { label: "Validation readiness", value: idea.aiReport.validationReadiness },
+                                            ].map(({ label, value }) => (
+                                                <div key={label} className="flex flex-col gap-1">
+                                                    <span className="text-xs text-theme-muted">{label}</span>
+                                                    <div className="h-2 rounded-full bg-[var(--input-bg)] overflow-hidden">
+                                                        <div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all" style={{ width: `${Math.min(100, Math.max(0, value))}%` }} />
+                                                    </div>
+                                                    <span className="text-sm font-bold text-theme-primary tabular-nums">{value}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    {/* Strengths */}
+                                    {idea.aiReport.strengths?.length > 0 && (
+                                        <div>
+                                            <h3 className="text-[10px] font-bold text-theme-muted uppercase tracking-[0.2em] mb-2">Strengths</h3>
+                                            <ul className="space-y-1.5">
+                                                {idea.aiReport.strengths.map((s: string, i: number) => (
+                                                    <li key={i} className="flex items-start gap-2 text-sm text-theme-secondary">
+                                                        <span className="text-emerald-400 mt-0.5">✓</span>
+                                                        <span>{s}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                    {/* Risks */}
+                                    {idea.aiReport.risks?.length > 0 && (
+                                        <div>
+                                            <h3 className="text-[10px] font-bold text-theme-muted uppercase tracking-[0.2em] mb-2">Risks</h3>
+                                            <ul className="space-y-1.5">
+                                                {idea.aiReport.risks.map((r: string, i: number) => (
+                                                    <li key={i} className="flex items-start gap-2 text-sm text-theme-secondary">
+                                                        <span className="text-amber-400 mt-0.5">!</span>
+                                                        <span>{r}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                    {/* Suggestions — only for the idea owner */}
+                                    {idea.aiReport.suggestions?.length > 0 && user?.id === idea.userId?._id && (
+                                        <div>
+                                            <h3 className="text-[10px] font-bold text-theme-muted uppercase tracking-[0.2em] mb-2">Suggestions</h3>
+                                            <ul className="space-y-1.5">
+                                                {idea.aiReport.suggestions.map((s: string, i: number) => (
+                                                    <li key={i} className="flex items-start gap-2 text-sm text-theme-secondary">
+                                                        <span className="text-violet-400 mt-0.5">→</span>
+                                                        <span>{s}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                    {idea.aiReport.generatedAt && (
+                                        <p className="text-[10px] text-theme-muted uppercase tracking-wider">
+                                            Generated {new Date(idea.aiReport.generatedAt).toLocaleDateString(undefined, { dateStyle: "medium" })}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* RIGHT — Sidebar */}

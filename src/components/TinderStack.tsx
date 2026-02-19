@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import VoteButtons from "@/components/VoteButtons";
+import IdeaCardAiMetrics from "@/components/IdeaCardAiMetrics";
 import gsap from "gsap";
 
 const catMeta: Record<string, { color: string; bg: string; border: string; glow: string }> = {
@@ -36,17 +37,17 @@ interface Idea {
     summary: string;
     category: string;
     voteScore: number;
-    validationScore: number;
     commentCount: number;
     userVote?: number | null;
     userId: { _id: string; name: string };
+    aiReport?: import("./IdeaCardAiMetrics").AiReportForCard | null;
 }
 
 interface TinderStackProps {
     ideas: Idea[];
 }
 
-const SWIPE_THRESHOLD = 50;
+const SWIPE_THRESHOLD = 40;
 const DURATION = 0.25;
 
 /** Mobile Tinder-style carousel: swipe right = next, swipe left = previous. Same card content with View more. */
@@ -88,7 +89,7 @@ export default function TinderStack({ ideas }: TinderStackProps) {
         const dir = swipeDirectionRef.current;
         gsap.fromTo(
             wrapperRef.current,
-            { x: dir * w },
+            { x: -dir * w },
             { x: 0, duration: DURATION, ease: "power2.out", overwrite: true, onComplete: () => { animating.current = false; } }
         );
     }, [current, n]);
@@ -106,14 +107,14 @@ export default function TinderStack({ ideas }: TinderStackProps) {
         gsap.killTweensOf(el);
         gsap.set(el, { x: 0 });
         gsap.to(el, {
-            x: -dir * w,
+            x: dir * w,
             duration: DURATION,
             ease: "power2.in",
             overwrite: true,
             onComplete: () => {
                 setCurrent(next);
                 setExpanded(false);
-                gsap.set(el, { x: dir * w });
+                gsap.set(el, { x: -dir * w });
                 justNavigated.current = true;
             },
         });
@@ -149,6 +150,17 @@ export default function TinderStack({ ideas }: TinderStackProps) {
         }
     }, [go]);
 
+    // Prevent page scroll when swiping on touch devices (passive: false required for preventDefault)
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+        const onTouchMove = (e: TouchEvent) => {
+            if (dragging.current && e.cancelable) e.preventDefault();
+        };
+        container.addEventListener("touchmove", onTouchMove, { passive: false });
+        return () => container.removeEventListener("touchmove", onTouchMove);
+    }, []);
+
     const handleMessage = async (e: React.MouseEvent, uid: string) => {
         e.preventDefault();
         e.stopPropagation();
@@ -176,8 +188,8 @@ export default function TinderStack({ ideas }: TinderStackProps) {
             </p>
             <div
                 ref={containerRef}
-                className="relative w-full max-w-[min(100%,380px)] mx-auto select-none"
-                style={{ height: "min(72vh, 520px)", touchAction: "pan-y" }}
+                className="relative w-full max-w-[min(100%,380px)] mx-auto select-none touch-none"
+                style={{ height: "min(72vh, 520px)", touchAction: "none" }}
                 onMouseMove={onMove}
                 onMouseUp={onEnd}
                 onMouseLeave={onEnd}
@@ -190,7 +202,6 @@ export default function TinderStack({ ideas }: TinderStackProps) {
                     className="absolute inset-0 will-change-transform cursor-grab active:cursor-grabbing"
                     onMouseDown={onStart}
                     onTouchStart={onStart}
-                    style={{ touchAction: "none" }}
                 >
                     <div className={`w-full h-full rounded-3xl overflow-hidden border bg-[var(--card-bg)] shadow-xl flex flex-col ${meta.border} ${meta.glow}`}>
                         <div className="h-1 bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-500 shrink-0" />
@@ -206,21 +217,7 @@ export default function TinderStack({ ideas }: TinderStackProps) {
                             </div>
 
                             <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl bg-[var(--input-bg)] border border-[var(--card-border)]">
-                                <div className="relative w-9 h-9 shrink-0">
-                                    <svg className="w-9 h-9 -rotate-90" viewBox="0 0 36 36">
-                                        <circle cx="18" cy="18" r="14" fill="none" stroke="var(--border-color)" strokeWidth="2.5" />
-                                        <circle cx="18" cy="18" r="14" fill="none"
-                                            stroke={idea.validationScore >= 70 ? "#34d399" : idea.validationScore >= 40 ? "#fbbf24" : "#fb923c"}
-                                            strokeWidth="2.5" strokeLinecap="round"
-                                            strokeDasharray={`${(idea.validationScore / 100) * 88} 88`}
-                                        />
-                                    </svg>
-                                    <span className={`absolute inset-0 flex items-center justify-center text-[10px] font-black ${idea.validationScore >= 70 ? "text-emerald-400" : idea.validationScore >= 40 ? "text-yellow-400" : "text-orange-400"}`}>
-                                        {idea.validationScore}
-                                    </span>
-                                </div>
-                                <span className="text-[8px] font-bold text-theme-muted uppercase">Trust</span>
-                                <div className="ml-auto flex items-center gap-1.5">
+                                <div className="flex items-center gap-1.5">
                                     <span className={`text-xs font-bold ${scoreColor}`}>{scoreSign}{idea.voteScore}</span>
                                     <span className="text-theme-muted text-xs">·</span>
                                     <span className="text-xs font-bold text-theme-muted">{idea.commentCount || 0}</span>
@@ -234,6 +231,12 @@ export default function TinderStack({ ideas }: TinderStackProps) {
                             <p className={`text-theme-secondary text-sm leading-relaxed mb-3 flex-1 min-h-0 overflow-y-auto ${expanded ? "" : "line-clamp-3"}`}>
                                 {idea.summary}
                             </p>
+
+                            {expanded && idea.aiReport && (
+                                <div className="mb-3">
+                                    <IdeaCardAiMetrics aiReport={idea.aiReport} />
+                                </div>
+                            )}
 
                             <div className="pt-3 border-t border-[var(--border-color)] space-y-3">
                                 <div className="flex items-center gap-2 flex-wrap">

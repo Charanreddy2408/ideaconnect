@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import VoteButtons from "@/components/VoteButtons";
+import IdeaCardAiMetrics from "@/components/IdeaCardAiMetrics";
 
 const catMeta: Record<string, { color: string; bg: string; border: string; glow: string }> = {
     Tech: { color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/25", glow: "shadow-blue-500/20" },
@@ -34,10 +35,10 @@ export interface IdeaForFlip {
     summary: string;
     category: string;
     voteScore: number;
-    validationScore: number;
     commentCount: number;
     userVote?: number | null;
     userId: { _id: string; name: string };
+    aiReport?: import("./IdeaCardAiMetrics").AiReportForCard | null;
 }
 
 interface MobileFlipCardProps {
@@ -81,21 +82,7 @@ export default function MobileFlipCard({ idea }: MobileFlipCardProps) {
                 </div>
 
                 <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl bg-[var(--input-bg)] border border-[var(--card-border)]">
-                    <div className="relative w-9 h-9 shrink-0">
-                        <svg className="w-9 h-9 -rotate-90" viewBox="0 0 36 36">
-                            <circle cx="18" cy="18" r="14" fill="none" stroke="var(--border-color)" strokeWidth="2.5" />
-                            <circle cx="18" cy="18" r="14" fill="none"
-                                stroke={idea.validationScore >= 70 ? "#34d399" : idea.validationScore >= 40 ? "#fbbf24" : "#fb923c"}
-                                strokeWidth="2.5" strokeLinecap="round"
-                                strokeDasharray={`${(idea.validationScore / 100) * 88} 88`}
-                            />
-                        </svg>
-                        <span className={`absolute inset-0 flex items-center justify-center text-[10px] font-black ${idea.validationScore >= 70 ? "text-emerald-400" : idea.validationScore >= 40 ? "text-yellow-400" : "text-orange-400"}`}>
-                            {idea.validationScore}
-                        </span>
-                    </div>
-                    <span className="text-[8px] font-bold text-theme-muted uppercase">Trust</span>
-                    <div className="ml-auto flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5">
                         <span className={`text-xs font-bold ${scoreColor}`}>{scoreSign}{idea.voteScore}</span>
                         <span className="text-theme-muted text-xs">·</span>
                         <span className="text-xs font-bold text-theme-muted">{idea.commentCount || 0} comments</span>
@@ -109,6 +96,12 @@ export default function MobileFlipCard({ idea }: MobileFlipCardProps) {
                 <p className={`text-theme-secondary text-sm leading-relaxed mb-3 ${expanded ? "line-clamp-none" : "line-clamp-2"}`}>
                     {idea.summary}
                 </p>
+
+                {expanded && idea.aiReport && (
+                    <div className="mb-3">
+                        <IdeaCardAiMetrics aiReport={idea.aiReport} />
+                    </div>
+                )}
 
                 <div className="mt-auto pt-3 border-t border-[var(--border-color)] space-y-3">
                     <div className="flex items-center gap-2 flex-wrap">

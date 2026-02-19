@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/db";
 import Idea from "@/models/Idea";
 import Vote from "@/models/Vote";
 import { getAuthUserId } from "@/lib/auth";
-import { calculateValidationScore } from "@/utils/validationScore";
+import { generateAIReport } from "@/lib/aiReport";
 import { z } from "zod";
 
 const updateIdeaSchema = z.object({
@@ -25,8 +25,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         await connectDB();
         const { id } = await params;
 
-        const idea = await Idea.findById(id).populate("userId", "name bio skills");
-        if (!idea) {
+        const idea = await Idea.findById(id).populate("userId", "name email");
+        if (!idea || !idea.aiReport) {
             return NextResponse.json({ message: "Idea not found" }, { status: 404 });
         }
 
@@ -80,23 +80,36 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         }
 
         const updates = result.data;
-
-        // Update fields individually to trigger validation/hooks if any
         Object.assign(idea, updates);
 
-        // Recalculate validation score if core fields changed
-        idea.validationScore = calculateValidationScore({
+        const updatedData = {
+            title: idea.title,
             summary: idea.summary,
             problem: idea.problem,
             targetAudience: idea.targetAudience,
             revenueModel: idea.revenueModel,
+            requiredSkills: Array.isArray(idea.requiredSkills) ? idea.requiredSkills : [],
+            category: idea.category,
             budget: idea.budget,
-            requiredSkills: idea.requiredSkills
-        });
+        };
 
+        let newReport;
+        try {
+            newReport = await generateAIReport(updatedData);
+        } catch (aiError) {
+            const message = aiError instanceof Error ? aiError.message : "AI evaluation failed";
+            console.error("AI report error on update:", aiError);
+            return NextResponse.json(
+                { message: "AI report regeneration failed.", error: message },
+                { status: 502 }
+            );
+        }
+
+        idea.aiReport = newReport;
         await idea.save();
 
-        return NextResponse.json({ message: "Idea updated successfully", idea }, { status: 200 });
+        const populated = await Idea.findById(id).populate("userId", "name email");
+        return NextResponse.json({ message: "Idea updated successfully", idea: populated }, { status: 200 });
 
     } catch (error) {
         console.error("PATCH IDEA ERROR:", error);

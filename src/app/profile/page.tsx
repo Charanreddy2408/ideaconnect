@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -30,6 +31,8 @@ export default function ProfilePage() {
     const [editInterests, setEditInterests] = useState<string[]>([]);
     const [newSkill, setNewSkill] = useState("");
     const [newInterest, setNewInterest] = useState("");
+    const [myIdeas, setMyIdeas] = useState<any[]>([]);
+    const [myIdeasLoading, setMyIdeasLoading] = useState(false);
 
     const fetchProfile = async () => {
         try {
@@ -135,8 +138,26 @@ export default function ProfilePage() {
     };
     const removeInterest = (interest: string) => setEditInterests((i) => i.filter((x) => x !== interest));
 
+    const fetchMyIdeas = async () => {
+        setMyIdeasLoading(true);
+        try {
+            const res = await fetch("/api/ideas/my");
+            if (res.ok) {
+                const data = await res.json();
+                setMyIdeas(Array.isArray(data) ? data : []);
+            }
+        } catch (error) {
+            console.error("Fetch my ideas failed:", error);
+        } finally {
+            setMyIdeasLoading(false);
+        }
+    };
+
     useEffect(() => {
-        if (user) fetchProfile();
+        if (user) {
+            fetchProfile();
+            fetchMyIdeas();
+        }
     }, [user]);
 
     // Entrance (no tilt) + smooth scroll: horizontal drift & lag parallax (different from idea detail)
@@ -410,6 +431,68 @@ export default function ProfilePage() {
                         )}
                     </div>
                 </div>
+            </div>
+
+            {/* My Posted Ideas */}
+            <div className="space-y-6 sm:space-y-8">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                    <h2 className="text-2xl sm:text-3xl font-black text-theme-primary tracking-tight">My Ideas</h2>
+                    <Link
+                        href="/ideas"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400 font-bold text-sm hover:bg-violet-500/20 transition-all"
+                    >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                        Browse all
+                    </Link>
+                </div>
+                {myIdeasLoading ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="h-40 rounded-2xl animate-shimmer" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }} />
+                        ))}
+                    </div>
+                ) : myIdeas.length === 0 ? (
+                    <div className="rounded-2xl border border-[var(--card-border)] p-10 sm:p-12 text-center" style={{ background: "var(--card-bg)" }}>
+                        <div className="w-14 h-14 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-7 h-7 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                        </div>
+                        <p className="text-theme-secondary font-medium mb-4">You haven&apos;t posted any ideas yet.</p>
+                        <Link
+                            href="/ideas"
+                            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold text-sm hover:from-violet-500 hover:to-indigo-500 transition-all"
+                        >
+                            Post your first idea
+                        </Link>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                        {myIdeas.map((idea: any) => (
+                            <Link
+                                key={idea._id}
+                                href={`/ideas/${idea._id}`}
+                                className="block rounded-2xl border border-[var(--card-border)] p-5 sm:p-6 hover:border-violet-500/30 transition-all group overflow-hidden"
+                                style={{ background: "var(--card-bg)" }}
+                            >
+                                <div className="flex items-start justify-between gap-2 mb-3">
+                                    <span className="px-2.5 py-1 rounded-lg bg-violet-500/10 border border-violet-500/20 text-[10px] font-bold text-violet-400 uppercase tracking-wider">
+                                        {idea.category || "Idea"}
+                                    </span>
+                                    <span className="text-[10px] text-theme-muted font-medium">
+                                        {idea.voteScore > 0 ? "+" : ""}{idea.voteScore} pts
+                                    </span>
+                                </div>
+                                <h3 className="text-lg font-bold text-theme-primary group-hover:text-violet-400 transition-colors line-clamp-2 mb-2">
+                                    {idea.title}
+                                </h3>
+                                <p className="text-sm text-theme-secondary line-clamp-2">{idea.summary}</p>
+                                <span className="inline-flex items-center gap-1.5 mt-4 text-xs font-bold text-violet-400 group-hover:gap-2 transition-all">
+                                    View idea
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                                </span>
+                            </Link>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Discovery Section */}

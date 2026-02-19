@@ -156,42 +156,63 @@ export default function IdeasPage() {
                     </p>
                 </div>
 
-                {/* Controls */}
-                <div className="mp-controls flex flex-col sm:flex-row gap-3 sm:items-center">
-                    {user && (
-                        <button
-                            onClick={() => setIsCreateModalOpen(true)}
-                            className="px-5 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold transition-all shadow-lg shadow-violet-500/20 text-sm flex items-center gap-2 justify-center sm:w-auto active:scale-95"
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                            </svg>
-                            Post Idea
-                        </button>
-                    )}
-
-                    <div className="relative flex-1 max-w-sm">
+                {/* Search + filters */}
+                <div className="mp-controls flex flex-col gap-4 w-full">
+                    {/* Search box — prominent marketplace search */}
+                    <div className="relative w-full max-w-xl">
+                        <label htmlFor="marketplace-search" className="sr-only">Search ideas by title or summary</label>
                         <input
+                            id="marketplace-search"
                             type="text"
-                            placeholder="Search ideas..."
+                            placeholder="Search by title or summary..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="input-field pl-10 text-sm"
+                            className="input-field w-full pl-12 pr-4 py-3.5 text-base rounded-2xl border-2 border-[var(--input-border)] focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all"
                         />
-                        <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
+                        {search && (
+                            <button
+                                type="button"
+                                onClick={() => setSearch("")}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-theme-muted hover:text-theme-primary hover:bg-[var(--surface-hover)] transition-colors"
+                                aria-label="Clear search"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        )}
                     </div>
 
-                    <select
-                        value={sort}
-                        onChange={(e) => setSort(e.target.value)}
-                        className="input-field text-sm w-auto pr-8 cursor-pointer"
-                    >
-                        <option value="recent">Most Recent</option>
-                        <option value="popular">Most Popular</option>
-                        <option value="validation">Highest Trust</option>
-                    </select>
+                    {/* Filters row */}
+                    <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                    <div className="flex flex-wrap items-center gap-3">
+                        {user && (
+                            <button
+                                onClick={() => setIsCreateModalOpen(true)}
+                                className="px-5 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold transition-all shadow-lg shadow-violet-500/20 text-sm flex items-center gap-2 justify-center active:scale-95"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                                </svg>
+                                Post Idea
+                            </button>
+                        )}
+                        <select
+                            value={sort}
+                            onChange={(e) => setSort(e.target.value)}
+                            className="input-field text-sm w-auto min-w-[140px] pr-8 cursor-pointer"
+                        >
+                            <option value="recent">Most Recent</option>
+                            <option value="popular">Most Popular</option>
+                        </select>
+                    </div>
+                    {search && (
+                        <p className="text-sm text-theme-muted">
+                            Searching for &ldquo;{search}&rdquo;
+                        </p>
+                    )}
+                    </div>
                 </div>
 
                 {/* Category Pills */}

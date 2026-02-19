@@ -1,5 +1,22 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
+export type CompetitionRisk = "Low" | "Medium" | "High";
+
+export interface IAIReport {
+    problemClarity: number;
+    audienceScore: number;
+    monetizationScore: number;
+    innovationScore: number;
+    feasibilityScore: number;
+    scalabilityScore: number;
+    validationReadiness: number;
+    competitionRisk: CompetitionRisk;
+    strengths: string[];
+    risks: string[];
+    suggestions: string[];
+    generatedAt: Date;
+}
+
 export interface IIdea extends Document {
     title: string;
     summary: string;
@@ -9,7 +26,6 @@ export interface IIdea extends Document {
     requiredSkills: string[];
     budget?: string;
     category: string;
-    validationScore: number;
     voteScore: number;
     upvotes: number;
     downvotes: number;
@@ -17,7 +33,27 @@ export interface IIdea extends Document {
     createdAt: Date;
     updatedAt: Date;
     commentCount: number;
+    aiReport: IAIReport;
 }
+
+const aiReportSchema = new Schema<IAIReport>({
+    problemClarity: { type: Number, required: true },
+    audienceScore: { type: Number, required: true },
+    monetizationScore: { type: Number, required: true },
+    innovationScore: { type: Number, required: true },
+    feasibilityScore: { type: Number, required: true },
+    scalabilityScore: { type: Number, required: true },
+    validationReadiness: { type: Number, required: true },
+    competitionRisk: {
+        type: String,
+        enum: ["Low", "Medium", "High"],
+        required: true,
+    },
+    strengths: { type: [String], default: [] },
+    risks: { type: [String], default: [] },
+    suggestions: { type: [String], default: [] },
+    generatedAt: { type: Date, required: true },
+}, { _id: false });
 
 const ideaSchema = new Schema<IIdea>({
     title: { type: String, required: true, trim: true },
@@ -28,12 +64,12 @@ const ideaSchema = new Schema<IIdea>({
     requiredSkills: { type: [String], default: [] },
     budget: { type: String },
     category: { type: String, required: true, trim: true },
-    validationScore: { type: Number, default: 0 },
     voteScore: { type: Number, default: 0 },
     upvotes: { type: Number, default: 0 },
     downvotes: { type: Number, default: 0 },
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     commentCount: { type: Number, default: 0 },
+    aiReport: { type: aiReportSchema, required: true },
 }, { timestamps: true });
 
 ideaSchema.index({ title: "text", summary: "text" });

@@ -200,7 +200,7 @@ function ParticleField() {
     useFrame((state) => {
         if (!ref.current) return;
         const t = state.clock.getElapsedTime();
-        ref.current.rotation.y = t * 0.002;
+        ref.current.rotation.y = t * 0.0008;
     });
 
     return (
@@ -287,17 +287,17 @@ function CameraController({ scrollProgress }: SceneProps) {
 
     useFrame(() => {
         const target = scrollProgress.current;
-        // Super smooth interpolation
-        smoothProgress.current += (target - smoothProgress.current) * 0.04;
+        // Smoother interpolation for calmer motion
+        smoothProgress.current += (target - smoothProgress.current) * 0.022;
         const p = THREE.MathUtils.clamp(smoothProgress.current, 0, 0.98);
 
-        // Position along the camera path
+        // Position along the camera path — slower lerp for smoothness
         const pos = cameraPath.getPoint(p);
-        camera.position.lerp(pos, 0.08);
+        camera.position.lerp(pos, 0.045);
 
         // Look-at along the look-at path
         const look = lookAtPath.getPoint(Math.min(p + 0.05, 0.98));
-        lookTarget.current.lerp(look, 0.06);
+        lookTarget.current.lerp(look, 0.04);
         camera.lookAt(lookTarget.current);
     });
 
@@ -310,14 +310,14 @@ function CameraController({ scrollProgress }: SceneProps) {
 function Scene({ scrollProgress }: SceneProps) {
     // Scattered objects — reduced count for smoother performance
     const objects: FloatObjProps[] = useMemo(() => [
-        { position: [-2.5, 0.5, 6], geometry: "icosa", color: "#6366f1", size: 0.5, rotSpeed: [0.003, 0.005, 0.002], floatSpeed: 0.6, floatAmp: 0.3 },
-        { position: [3, 1.5, 5], geometry: "torus", color: "#a855f7", size: 0.4, rotSpeed: [0.002, 0.004, 0.001], floatSpeed: 0.5, floatAmp: 0.2 },
-        { position: [-4, 2, 0], geometry: "torusKnot", color: "#818cf8", size: 0.5, rotSpeed: [0.002, 0.003, 0.001], floatSpeed: 0.4, floatAmp: 0.35 },
-        { position: [2, 0, -5], geometry: "torus", color: "#a855f7", size: 0.55, rotSpeed: [0.001, 0.005, 0.003], floatSpeed: 0.6, floatAmp: 0.3 },
-        { position: [-3, 1, -7], geometry: "octahedron", color: "#06b6d4", size: 0.5, rotSpeed: [0.004, 0.002, 0.003], floatSpeed: 0.5, floatAmp: 0.25 },
-        { position: [0, -1, -10], geometry: "box", color: "#c084fc", size: 0.6, rotSpeed: [0.003, 0.001, 0.005], floatSpeed: 0.5, floatAmp: 0.2 },
-        { position: [3, 0.5, -13], geometry: "torus", color: "#a855f7", size: 0.5, rotSpeed: [0.002, 0.005, 0.004], floatSpeed: 0.4, floatAmp: 0.3 },
-        { position: [-3, 0, -18], geometry: "icosa", color: "#c084fc", size: 0.5, rotSpeed: [0.001, 0.004, 0.003], floatSpeed: 0.5, floatAmp: 0.4 },
+        { position: [-2.5, 0.5, 6], geometry: "icosa", color: "#6366f1", size: 0.5, rotSpeed: [0.0012, 0.002, 0.0008], floatSpeed: 0.35, floatAmp: 0.22 },
+        { position: [3, 1.5, 5], geometry: "torus", color: "#a855f7", size: 0.4, rotSpeed: [0.0008, 0.0016, 0.0004], floatSpeed: 0.3, floatAmp: 0.15 },
+        { position: [-4, 2, 0], geometry: "torusKnot", color: "#818cf8", size: 0.5, rotSpeed: [0.0008, 0.0012, 0.0004], floatSpeed: 0.25, floatAmp: 0.28 },
+        { position: [2, 0, -5], geometry: "torus", color: "#a855f7", size: 0.55, rotSpeed: [0.0004, 0.002, 0.0012], floatSpeed: 0.35, floatAmp: 0.22 },
+        { position: [-3, 1, -7], geometry: "octahedron", color: "#06b6d4", size: 0.5, rotSpeed: [0.0016, 0.0008, 0.0012], floatSpeed: 0.3, floatAmp: 0.18 },
+        { position: [0, -1, -10], geometry: "box", color: "#c084fc", size: 0.6, rotSpeed: [0.0012, 0.0004, 0.002], floatSpeed: 0.3, floatAmp: 0.15 },
+        { position: [3, 0.5, -13], geometry: "torus", color: "#a855f7", size: 0.5, rotSpeed: [0.0008, 0.002, 0.0016], floatSpeed: 0.25, floatAmp: 0.22 },
+        { position: [-3, 0, -18], geometry: "icosa", color: "#c084fc", size: 0.5, rotSpeed: [0.0004, 0.0016, 0.0012], floatSpeed: 0.3, floatAmp: 0.28 },
     ], []);
 
     return (
@@ -339,7 +339,7 @@ function Scene({ scrollProgress }: SceneProps) {
             <pointLight position={[4, 3, -14]} intensity={0.8} color="#818cf8" distance={15} />
 
             {/* Stars background */}
-            <Stars radius={50} depth={50} count={1200} factor={2.5} saturation={0.25} fade speed={0.2} />
+            <Stars radius={50} depth={50} count={1200} factor={2.5} saturation={0.2} fade speed={0.08} />
 
             {/* Floating geometric objects */}
             {objects.map((obj, i) => (
@@ -347,10 +347,10 @@ function Scene({ scrollProgress }: SceneProps) {
             ))}
 
             {/* Glow rings */}
-            <GlowRing position={[0, 1, 4]} radius={2.5} color="#6366f1" tilt={[0.3, 0.2, 0]} speed={0.05} />
-            <GlowRing position={[-2, 2, -4]} radius={1.8} color="#a855f7" tilt={[0.8, 0, 0.3]} speed={-0.04} />
-            <GlowRing position={[1.5, 0.5, -9]} radius={2.2} color="#06b6d4" tilt={[0.5, -0.3, 0.6]} speed={0.06} />
-            <GlowRing position={[0, 2, -15]} radius={3.0} color="#818cf8" tilt={[0.2, 0.5, 0]} speed={-0.03} />
+            <GlowRing position={[0, 1, 4]} radius={2.5} color="#6366f1" tilt={[0.3, 0.2, 0]} speed={0.02} />
+            <GlowRing position={[-2, 2, -4]} radius={1.8} color="#a855f7" tilt={[0.8, 0, 0.3]} speed={-0.016} />
+            <GlowRing position={[1.5, 0.5, -9]} radius={2.2} color="#06b6d4" tilt={[0.5, -0.3, 0.6]} speed={0.024} />
+            <GlowRing position={[0, 2, -15]} radius={3.0} color="#818cf8" tilt={[0.2, 0.5, 0]} speed={-0.012} />
 
             {/* Light beams */}
             <LightBeam position={[-3, 3, 2]} height={12} color="#6366f1" width={0.3} />
@@ -384,12 +384,12 @@ function PostProcessing() {
     return (
         <EffectComposer multisampling={0}>
             <Bloom
-                luminanceThreshold={0.2}
-                luminanceSmoothing={0.85}
+                luminanceThreshold={0.25}
+                luminanceSmoothing={0.92}
                 height={180}
-                intensity={1.2}
+                intensity={0.95}
             />
-            <Vignette offset={0.3} darkness={0.7} />
+            <Vignette offset={0.25} darkness={0.55} />
         </EffectComposer>
     );
 }

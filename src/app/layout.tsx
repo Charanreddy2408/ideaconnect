@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { Inter, Sora } from "next/font/google";
+import { Inter, Sora, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ChatProvider } from "@/context/ChatContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import Navbar from "@/components/Navbar";
+import WelcomeGate from "@/components/WelcomeGate";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -15,6 +16,12 @@ const sora = Sora({
   subsets: ["latin"],
   variable: "--font-heading",
   weight: ["300", "400", "500", "600", "700", "800"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -32,7 +39,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <body className={`${inter.variable} ${sora.variable} font-sans antialiased min-h-screen relative overflow-x-hidden bg-theme text-theme-primary`}>
+      <body className={`${inter.variable} ${sora.variable} ${jetbrainsMono.variable} font-sans antialiased min-h-screen relative overflow-x-hidden bg-theme text-theme-primary`}>
         {/* Ambient Background Elements */}
         <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full animate-float-slow" style={{ background: 'var(--glow-primary)', filter: 'blur(140px)' }} />
@@ -43,10 +50,12 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <ChatProvider>
-              <Navbar />
-              <main className="relative z-10">
-                {children}
-              </main>
+              <WelcomeGate>
+                <Navbar />
+                <main className="relative z-10">
+                  {children}
+                </main>
+              </WelcomeGate>
             </ChatProvider>
           </AuthProvider>
         </ThemeProvider>

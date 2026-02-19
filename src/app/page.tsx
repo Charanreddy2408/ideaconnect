@@ -6,10 +6,11 @@ import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 import Lenis from "lenis";
 
 if (typeof window !== "undefined") {
-    gsap.registerPlugin(ScrollTrigger);
+    gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 }
 
 const HeroScene = dynamic(() => import("@/components/HeroScene"), {
@@ -17,55 +18,46 @@ const HeroScene = dynamic(() => import("@/components/HeroScene"), {
     loading: () => null,
 });
 
-/* ═══════ Helpers — word-based for fewer DOM nodes and smoother animation ═══════ */
-function splitWords(text: string, className: string) {
-    return text.split(" ").map((word, i) => (
-        <span key={i} className={`${className} inline-block mr-[0.25em]`}>
-            {word}
-        </span>
-    ));
-}
-
 /* ═══════ Static Data ═══════ */
 const featureIcons = [
-    // Smart Matching — crosshair/target
-    <svg key="f0" className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /><path d="M12 2v4m0 12v4M2 12h4m12 0h4" /></svg>,
+    // AI Evaluation — spark/brain
+    <svg key="f0" className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>,
+    // Smart Matching — target
+    <svg key="f1" className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /><path d="M12 2v4m0 12v4M2 12h4m12 0h4" /></svg>,
     // Real-time Chat — inbox
-    <svg key="f1" className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>,
-    // Trust Scores — shield check
-    <svg key="f2" className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>,
+    <svg key="f2" className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>,
     // Launch Tools — rocket
     <svg key="f3" className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.63 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" /></svg>,
 ];
 
 const features = [
-    { title: "Smart Matching", desc: "AI finds partners with complementary skills, aligned goals, and shared vision.", num: "01" },
-    { title: "Real-time Chat", desc: "End-to-end encrypted messaging, file sharing, voice — everything built in.", num: "02" },
-    { title: "Trust Scores", desc: "Community-driven verification & reputation system for quality connections.", num: "03" },
-    { title: "Launch Tools", desc: "From prototype to market — milestone planning, resource sharing, analytics.", num: "04" },
+    { title: "Instant AI Evaluation", desc: "Every idea gets an AI report in seconds: clarity, feasibility, monetization potential, risks, and suggestions — so you and your audience see the same picture.", num: "01" },
+    { title: "Open Marketplace", desc: "Browse and search ideas by category. No gatekeeping — anyone can post, discover, and explore what others are building.", num: "02" },
+    { title: "Direct Connection", desc: "One click to message someone interested in your idea, or reach out to ideas you care about. Turn thoughts into real conversations.", num: "03" },
+    { title: "Community Signal", desc: "Votes and comments show what resonates. See which ideas get traction and who’s engaged — all in one place.", num: "04" },
 ];
 
-const steps = [
-    { num: "01", title: "Share Your Vision", desc: "Post your idea with rich details — the problem, the market, and the skills you need to make it real." },
-    { num: "02", title: "Get Matched", desc: "Our intelligent algorithm analyzes complementary strengths and connects you with the right co-founders." },
-    { num: "03", title: "Build Together", desc: "Collaborate through integrated tools — real-time chat, shared milestones, file sharing, and more." },
-    { num: "04", title: "Launch & Scale", desc: "Take your validated product to market backed by a passionate, aligned team ready to execute." },
+const howItWorks = [
+    { num: "01", title: "Post Your Idea", desc: "Share your idea with problem, audience, and what you’re looking for. Clear details help the right people find you.", img: "https://images.unsplash.com/photo-1532619675605-1ede6c2ed2b0?w=800&q=80" },
+    { num: "02", title: "Receive AI Feedback", desc: "Get an instant AI report on clarity, feasibility, monetization, and risks. Use it to refine your pitch and align with others.", img: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80" },
+    { num: "03", title: "Get Discovered", desc: "Your idea appears in the marketplace. Others browse, vote, and comment — so you see who cares before you connect.", img: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80" },
+    { num: "04", title: "Connect with Interested People", desc: "Message creators or responders directly. Turn interest into conversations, co-founders, or customers — your call.", img: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80" },
 ];
 
 const testimonials = [
-    { name: "Sarah Chen", role: "Founder, DataFlow", quote: "Found my technical co-founder in 2 days. We raised our seed round 3 months later.", avatar: "S" },
-    { name: "Alex Rivera", role: "CTO, BuildStack", quote: "The matching algorithm connected me with the perfect business partner. Now a team of 12.", avatar: "A" },
-    { name: "Maya Patel", role: "CEO, GreenLeaf", quote: "Trust scoring gave me confidence to collaborate with strangers who became family.", avatar: "M" },
+    { name: "Jordan K.", role: "Product thinker", quote: "The AI report made me sharpen my idea before I even posted. When I did, the right person messaged me within a week.", avatar: "J" },
+    { name: "Sam T.", role: "Builder", quote: "I browse the feed when I’m looking for a side project. Found two ideas I loved and reached out — one became a real collaboration.", avatar: "S" },
+    { name: "Riley M.", role: "First-time poster", quote: "I was nervous to put my idea out there. The instant feedback and a few upvotes gave me the confidence to reply to someone who wanted to build it with me.", avatar: "R" },
 ];
 
 const stats = [
-    { value: 1200, suffix: "+", label: "Active Founders" },
-    { value: 450, suffix: "+", label: "Partners Matched" },
-    { value: 89, suffix: "%", label: "Success Rate" },
-    { value: 300, suffix: "+", label: "Products Launched" },
+    { value: 1200, suffix: "+", label: "Ideas Shared" },
+    { value: 450, suffix: "+", label: "Connections Made" },
+    { value: 100, suffix: "%", label: "Ideas Get AI Score" },
+    { value: 800, suffix: "+", label: "Active Users" },
 ];
 
-const marqueeWords = ["Innovate", "Connect", "Build", "Launch", "Grow", "Scale", "Dream", "Create", "Ship", "Disrupt"];
+const marqueeWords = ["Ideas", "AI", "Feedback", "Connect", "Discover", "Build", "Collaborate", "Evaluate", "Share", "Ship"];
 
 /* ═══════ Hero image with fallback when missing ═══════ */
 function HeroImage({ src, alt, className = "", loading = "eager" }: { src: string; alt: string; className?: string; loading?: "eager" | "lazy" }) {
@@ -105,6 +97,12 @@ export default function Home() {
     useEffect(() => {
         if (!mainRef.current) return;
 
+        /* ═══ ScrollTrigger config — better scroll behavior ═══ */
+        ScrollTrigger.config({
+            limitCallbacks: true,
+            ignoreMobileResize: true,
+            autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
+        });
         /* ═══ Lenis Smooth Scroll — tuned for responsiveness ═══ */
         const lenis = new Lenis({
             duration: 1.15,
@@ -114,6 +112,28 @@ export default function Home() {
         lenis.on("scroll", ScrollTrigger.update);
         gsap.ticker.add((time) => lenis.raf(time * 1000));
         gsap.ticker.lagSmoothing(0);
+
+        /* ═══ Observer — scroll direction via ScrollTrigger.observe (for UI/parallax) ═══ */
+        const ob = ScrollTrigger.observe({
+            type: "scroll,touch,wheel",
+            preventDefault: false,
+            onDown: () => document.body.setAttribute("data-scroll-direction", "down"),
+            onUp: () => document.body.setAttribute("data-scroll-direction", "up"),
+            tolerance: 10,
+        });
+
+        /* ═══ Smooth scroll to section (anchor links + Lenis) ═══ */
+        const handleAnchor = (e: MouseEvent) => {
+            const target = (e.target as HTMLElement).closest("a[href^='#']") as HTMLAnchorElement | null;
+            if (!target || !target.hash) return;
+            const id = target.hash.slice(1);
+            const el = document.getElementById(id);
+            if (el) {
+                e.preventDefault();
+                lenis.scrollTo(el, { offset: 0, duration: 1.2, easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -8 * t)) });
+            }
+        };
+        mainRef.current.addEventListener("click", handleAnchor, false);
 
         /* ═══ Custom Cursor — throttled for smoother main thread ═══ */
         const cursor = cursorRef.current!;
@@ -178,15 +198,13 @@ export default function Home() {
             // Badge
             heroTl.from(".hero-badge", { y: 30, opacity: 0, duration: 0.8 }, 0.2);
 
-            // Word-by-word reveal for title (lighter than char-by-char)
-            heroTl.from(".hero-char", {
-                y: 60,
-                rotateX: -45,
+            // Hero headline — gentle fade in
+            heroTl.from(".hero-headline", {
                 opacity: 0,
-                stagger: 0.06,
-                duration: 0.9,
-                ease: "back.out(1.5)",
-            }, 0.3);
+                y: 24,
+                duration: 1,
+                ease: "power3.out",
+            }, 0.35);
 
             // Description blur-in
             heroTl.from(".hero-desc", {
@@ -285,66 +303,22 @@ export default function Home() {
             });
 
             /* ═══════════════════════════════════════════
-               PROCESS — cinematic stagger with draw + morph
+               HOW IT WORKS — simple card stagger
                ═══════════════════════════════════════════ */
-            // Header slides up with a smooth clip-path wipe
-            gsap.fromTo(".process-header", {
+            gsap.fromTo(".how-header", {
                 clipPath: "inset(100% 0 0 0)",
-                y: 60,
+                y: 40,
             }, {
                 clipPath: "inset(0% 0 0 0)",
                 y: 0,
                 ease: "power4.out",
-                scrollTrigger: { trigger: "#process", start: "top 85%", end: "top 50%", scrub: 1 },
+                scrollTrigger: { trigger: "#how-it-works", start: "top 85%", end: "top 55%", scrub: 1 },
             });
-
-            // Pinned process section — one timeline drives line + cards (no duplicate)
-            ScrollTrigger.getById("process-pin")?.kill();
-            const processTl = gsap.timeline({
-                scrollTrigger: {
-                    id: "process-pin",
-                    trigger: "#process",
-                    start: "top 20%",
-                    end: "+=200%",
-                    scrub: 1,
-                    pin: "#process-pin-wrap",
-                    pinSpacing: true,
-                    anticipatePin: 1,
-                },
-            });
-
-            // Timeline line draws once with the same scroll range
-            processTl.fromTo(".process-timeline-line", { scaleY: 0 }, { scaleY: 1, ease: "none" }, 0);
-
-            gsap.utils.toArray<HTMLElement>(".step-card").forEach((card, i) => {
-                const fromLeft = i % 2 === 0;
-                const inner = card.querySelector(".step-card-inner") as HTMLElement;
-                const icon = card.querySelector(".step-num-icon") as HTMLElement;
-
-                // Icon pops in with spring
-                processTl.fromTo(icon, {
-                    scale: 0, rotation: -180, opacity: 0,
-                }, {
-                    scale: 1, rotation: 0, opacity: 1,
-                    ease: "back.out(1.7)", duration: 0.4,
-                }, i * 0.6);
-
-                // Card slides in from alternating side with 3D rotation
-                processTl.fromTo(card, {
-                    x: fromLeft ? -120 : 120,
-                    opacity: 0,
-                    rotateY: fromLeft ? -15 : 15,
-                }, {
-                    x: 0, opacity: 1, rotateY: 0,
-                    ease: "power3.out", duration: 0.6,
-                }, i * 0.6 + 0.1);
-
-                // Inner card gets a subtle scale-up
-                if (inner) {
-                    processTl.fromTo(inner, { scale: 0.92 }, {
-                        scale: 1, ease: "power2.out", duration: 0.4,
-                    }, i * 0.6 + 0.2);
-                }
+            gsap.utils.toArray<HTMLElement>(".how-card").forEach((card, i) => {
+                gsap.from(card, {
+                    y: 60, opacity: 0, scale: 0.95,
+                    scrollTrigger: { trigger: card, start: "top 92%", end: "top 62%", scrub: 1 },
+                });
             });
 
             /* ═══════════════════════════════════════════
@@ -470,6 +444,8 @@ export default function Home() {
         return () => {
             ctx.revert();
             mm.revert();
+            ob.kill();
+            mainRef.current?.removeEventListener("click", handleAnchor, false);
             lenis.destroy();
             window.removeEventListener("mousemove", onMouseMove);
             cancelAnimationFrame(rafId);
@@ -498,12 +474,13 @@ export default function Home() {
                 <div id="scroll-progress" className="h-full w-full origin-left scale-x-0 bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-500" />
             </div>
 
-            {/* ── 3D Background — fixed, covers entire viewport ── */}
+            {/* ── 3D Background — fixed, smooth blend ── */}
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <HeroScene scrollProgress={scrollProgressRef} />
-                {/* Light mode frosted overlay */}
+                {/* Smooth gradient overlay for softer blend */}
                 <div className="absolute inset-0 hero-3d-overlay" />
-                </div>
+                <div className="absolute inset-0 opacity-[0.4]" style={{ background: "radial-gradient(ellipse 85% 75% at 50% 45%, transparent 30%, var(--bg) 100%)" }} />
+            </div>
 
             {/* ════════════════════════════════════════
                 HERO
@@ -513,30 +490,24 @@ export default function Home() {
                     <div className="hero-line w-16 h-[2px] bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full mx-auto" />
 
                     <span className="hero-badge inline-block px-5 py-2 rounded-full backdrop-blur-sm text-[10px] font-black tracking-[0.3em] text-violet-400 uppercase" style={{ background: "var(--hero-badge-bg)", border: "1px solid var(--hero-badge-border)" }}>
-                        ✨ Where Ideas Meet Partners
+                        Idea Marketplace · AI-Powered · Open to All
                     </span>
 
-                    <h1 className="hero-title text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-black tracking-[-0.04em] leading-[1] hero-text-adaptive">
-                        <span className="block overflow-hidden">
-                            {splitWords("Where Ideas", "hero-char")}
-                        </span>
-                        <span className="block overflow-hidden">
-                            {splitWords("Find Their", "hero-char")}
-                        </span>
-                        <span className="block overflow-hidden text-gradient">
-                            {splitWords("Partners.", "hero-char")}
-                        </span>
+                    <h1 className="hero-title hero-headline text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-[-0.03em] leading-[1.1] hero-text-adaptive text-center" style={{ fontFamily: "var(--font-heading), var(--font-sans), sans-serif" }}>
+                        <span className="block">Where Ideas</span>
+                        <span className="block">Get a <span className="text-gradient">Stage.</span></span>
+                        <span className="block mt-2 text-lg sm:text-xl md:text-2xl font-medium text-theme-muted tracking-normal">Clarity in seconds. Audience that cares.</span>
                     </h1>
 
                     <p className="hero-desc text-base sm:text-lg hero-text-dim max-w-lg leading-relaxed font-medium mx-auto">
-                        The ultimate ecosystem where visionary founders and elite builders unite to create world-changing products.
-                            </p>
+                        Post your idea and get instant AI feedback on clarity, feasibility, and potential. Discover others’ ideas, connect with people who care, and turn thoughts into real conversations — all in one place.
+                    </p>
 
                     <div className="flex flex-wrap items-center justify-center gap-4">
                             {user ? (
                             <Link href="/ideas" className="hero-btn magnetic group relative px-10 py-4.5 rounded-full font-bold text-sm overflow-hidden pointer-events-auto" style={{ background: "var(--hero-btn-bg)", color: "var(--hero-btn-text)" }}>
                                 <span className="relative z-10 flex items-center gap-2">
-                                    Explore Hub
+                                    Go to Marketplace
                                     <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                                 </span>
                                 <span className="absolute inset-0 bg-gradient-to-r from-violet-500 to-indigo-500 scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-500" />
@@ -557,11 +528,11 @@ export default function Home() {
                             )}
                         </div>
 
-                    {/* Hero character illustrations — idea + thinking */}
+                    {/* Hero concept images — idea + collaboration (Unsplash) */}
                     <div className="hero-visuals flex flex-wrap items-end justify-center gap-8 sm:gap-12 lg:gap-16 mt-10 sm:mt-14 lg:mt-16 max-w-5xl mx-auto">
                         <div className="hero-img-wrap hero-img-left w-[140px] sm:w-[180px] lg:w-[220px] flex-shrink-0">
                             <div className="hero-img-float relative aspect-square rounded-3xl overflow-hidden border-2 border-violet-500/20 bg-white/5 shadow-2xl shadow-violet-500/10 backdrop-blur-sm animate-float-subtle">
-                                <HeroImage src="/images/hero-idea.webp" alt="Lightbulb moment — where ideas spark" className="absolute inset-0 w-full h-full object-contain p-2" />
+                                <HeroImage src="https://images.unsplash.com/photo-1532619675605-1ede6c2ed2b0?w=440&q=85" alt="Where ideas spark" className="absolute inset-0 w-full h-full object-cover" />
                             </div>
                             <p className="text-center mt-3 text-[10px] font-bold text-theme-muted uppercase tracking-widest">Idea</p>
                         </div>
@@ -572,20 +543,20 @@ export default function Home() {
                         </div>
                         <div className="hero-img-wrap hero-img-right w-[140px] sm:w-[180px] lg:w-[220px] flex-shrink-0">
                             <div className="hero-img-float relative aspect-square rounded-3xl overflow-hidden border-2 border-indigo-500/20 bg-white/5 shadow-2xl shadow-indigo-500/10 backdrop-blur-sm animate-float-subtle" style={{ animationDelay: "0.4s" }}>
-                                <HeroImage src="/images/hero-thinking.webp" alt="Think it through — brainstorm and connect" className="absolute inset-0 w-full h-full object-contain p-2" />
+                                <HeroImage src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=440&q=85" alt="Collaborate and build" className="absolute inset-0 w-full h-full object-cover" />
                             </div>
                             <p className="text-center mt-3 text-[10px] font-bold text-theme-muted uppercase tracking-widest">Connect</p>
                         </div>
                     </div>
                 </div>
 
-                {/* Scroll hint */}
-                <div className="hero-scroll-hint absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 hero-scroll-color z-20">
-                    <span className="text-[9px] font-bold uppercase tracking-[0.3em]">Scroll to explore</span>
+                {/* Scroll hint — smooth scroll to content */}
+                <a href="#creative-strip" className="hero-scroll-hint absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 hero-scroll-color z-20 cursor-pointer group">
+                    <span className="text-[9px] font-bold uppercase tracking-[0.3em] group-hover:opacity-80 transition-opacity">Scroll to explore</span>
                     <div className="w-5 h-8 rounded-full border-2 border-current flex items-start justify-center pt-1.5">
                         <div className="w-1 h-2 rounded-full bg-current animate-bounce" />
                     </div>
-                </div>
+                </a>
             </section>
 
             {/* ═══════ Content sections — layered over the 3D background ═══════ */}
@@ -597,15 +568,15 @@ export default function Home() {
             <section id="creative-strip" className="py-20 sm:py-28 overflow-hidden">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
                     <div className="creative-strip-text flex-1 text-center lg:text-left space-y-6 order-2 lg:order-1">
-                        <span className="inline-block px-5 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-black tracking-[0.3em] text-amber-400 uppercase">Creative Process</span>
+                        <span className="inline-block px-5 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-black tracking-[0.3em] text-amber-400 uppercase">Powered by AI</span>
                         <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-[-0.04em] text-theme-primary leading-[1.1]">
-                            Where Ideas<br /><span className="text-gradient">Come to Life.</span>
+                            Every Idea Gets <span className="text-gradient">Instant Feedback.</span>
                         </h2>
-                        <p className="text-theme-secondary text-base sm:text-lg max-w-xl mx-auto lg:mx-0">From the first lightbulb moment to building with the right partners — think it through, then connect and ship.</p>
+                        <p className="text-theme-secondary text-base sm:text-lg max-w-xl mx-auto lg:mx-0">From the moment you post, our AI evaluates your idea and returns a clear report: clarity, feasibility, monetization potential, risks, and actionable suggestions — so you and your audience see the same picture.</p>
                     </div>
                     <div className="creative-strip-img flex-shrink-0 w-full max-w-sm lg:max-w-md order-1 lg:order-2">
                         <div className="relative aspect-square rounded-[32px] overflow-hidden border-2 border-violet-500/20 bg-white/5 shadow-2xl shadow-violet-500/10">
-                            <HeroImage src="/images/hero-thinking.webp" alt="Brainstorm and build" className="absolute inset-0 w-full h-full object-contain p-6" loading="lazy" />
+                            <HeroImage src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&q=85" alt="Brainstorm and build together" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
                         </div>
                     </div>
                 </div>
@@ -632,9 +603,9 @@ export default function Home() {
                         <div className="max-w-lg space-y-6 text-center md:text-left">
                             <span className="inline-block px-5 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] font-black tracking-[0.3em] text-violet-400 uppercase">Why IdeaConnect</span>
                             <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-[-0.04em] text-theme-primary leading-[1.05]">
-                                Built for<br /><span className="text-gradient">Builders.</span>
+                                Built to Give Every Idea<br /><span className="text-gradient">a Fair Shot.</span>
                             </h2>
-                            <p className="text-theme-secondary text-base sm:text-lg leading-relaxed">Four pillars that make IdeaConnect the #1 platform for turning ideas into products.</p>
+                            <p className="text-theme-secondary text-base sm:text-lg leading-relaxed">Four pillars that make IdeaConnect the place where ideas get evaluated, discovered, and turned into real connections.</p>
                             <div className="flex items-center gap-3 justify-center md:justify-start">
                                 <span className="text-theme-muted text-sm font-bold">Scroll</span>
                                 <div className="w-12 h-[2px] bg-gradient-to-r from-violet-500 to-transparent" />
@@ -667,91 +638,33 @@ export default function Home() {
             </section>
 
             {/* ════════════════════════════════════════
-                PROCESS — timeline with alternating cards
+                HOW IT WORKS — no timeline, cards + stock photos
                ════════════════════════════════════════ */}
-            <section id="process" className="relative" style={{ perspective: "1200px" }}>
-                <div id="process-pin-wrap" className="px-4 sm:px-6 py-24 sm:py-40 max-w-6xl mx-auto w-full">
-                    <div className="process-header text-center mb-16 sm:mb-24 space-y-4">
-                        <span className="inline-block px-5 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] font-black tracking-[0.3em] text-violet-400 uppercase">The Process</span>
-                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-[-0.04em] text-theme-primary leading-[1.05]">
-                            From Zero to <span className="text-gradient">Launch.</span>
-                        </h2>
-                    </div>
-
-                    <div id="process-cards" className="relative" style={{ transformStyle: "preserve-3d" }}>
-                        {/* Vertical timeline line (left on mobile, center on desktop) */}
-                        <div className="absolute left-[26px] sm:left-[34px] md:left-1/2 top-0 bottom-0 w-[2px] md:-translate-x-[1px] z-0">
-                            <div className="process-timeline-line w-full h-full bg-gradient-to-b from-violet-500 via-indigo-500 to-cyan-500 origin-top rounded-full" />
+            <section id="how-it-works" className="relative px-4 sm:px-6 py-24 sm:py-32 max-w-6xl mx-auto w-full">
+                <div className="how-header text-center mb-16 sm:mb-20 space-y-4">
+                    <span className="inline-block px-5 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] font-black tracking-[0.3em] text-violet-400 uppercase">How it works</span>
+                    <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-[-0.04em] text-theme-primary leading-[1.05]">
+                        From Idea to <span className="text-gradient">Connection.</span>
+                    </h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10">
+                    {howItWorks.map((step, i) => (
+                        <div key={i} className="how-card group">
+                            <div className="rounded-[24px] overflow-hidden border border-[var(--border-color)] backdrop-blur-xl h-full flex flex-col sm:flex-row" style={{ background: "var(--surface)" }}>
+                                <div className="w-full sm:w-[40%] min-h-[200px] sm:min-h-0 relative flex-shrink-0">
+                                    <img src={step.img} alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent sm:bg-gradient-to-r sm:from-black/30 sm:to-transparent" />
+                                    <div className="absolute top-4 left-4 w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                                        <span className="text-sm font-black text-white">{step.num}</span>
+                                    </div>
+                                </div>
+                                <div className="p-6 sm:p-8 flex flex-col justify-center flex-1">
+                                    <h3 className="text-xl sm:text-2xl font-black text-theme-primary group-hover:text-gradient transition-all duration-300">{step.title}</h3>
+                                    <p className="text-theme-secondary text-sm sm:text-base leading-relaxed mt-2">{step.desc}</p>
+                                </div>
+                            </div>
                         </div>
-
-                        <div className="space-y-12 sm:space-y-16">
-                            {steps.map((step, i) => {
-                                const isEven = i % 2 === 0;
-                                return (
-                                    <div key={i} className="step-card relative pl-16 sm:pl-20 md:pl-0 md:grid md:grid-cols-[1fr_auto_1fr] md:gap-0 items-start" style={{ transformStyle: "preserve-3d" }}>
-                                        {/* Left side (card for even, empty for odd) */}
-                                        {isEven ? (
-                                            <div className="hidden md:block md:pr-10">
-                                                <div className="step-card-inner rounded-[24px] p-8 sm:p-10 group magnetic relative overflow-hidden text-right backdrop-blur-xl"
-                                                    style={{ background: "var(--surface)", border: "1px solid var(--border-color)" }}>
-                                                    <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                                    <div className="flex flex-col gap-4 items-end relative z-10">
-                                                        <span className="text-6xl font-black text-theme-muted opacity-[0.06]">{step.num}</span>
-                                                        <h3 className="text-xl sm:text-2xl lg:text-3xl font-black text-theme-primary group-hover:text-gradient transition-all duration-300">{step.title}</h3>
-                                                        <p className="text-theme-secondary text-sm sm:text-base lg:text-lg leading-relaxed max-w-lg">{step.desc}</p>
-                                                    </div>
-                                                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500 via-indigo-500 to-transparent scale-x-0 group-hover:scale-x-100 origin-right transition-transform duration-700" />
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="hidden md:block" />
-                                        )}
-
-                                        {/* Center timeline node */}
-                                        <div className="step-num-icon absolute left-2 sm:left-4 md:relative md:left-auto z-10 flex items-start justify-center pt-2">
-                                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[var(--bg)] flex items-center justify-center ring-4 ring-[var(--bg)]">
-                                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-                                                    <span className="text-xs sm:text-sm font-black text-white">{step.num}</span>
-                                                </div>
-                                            </div>
-                           </div>
-                           
-                                        {/* Right side (card for odd, empty for even) */}
-                                        {!isEven ? (
-                                            <div className="hidden md:block md:pl-10">
-                                                <div className="step-card-inner rounded-[24px] p-8 sm:p-10 group magnetic relative overflow-hidden backdrop-blur-xl"
-                                                    style={{ background: "var(--surface)", border: "1px solid var(--border-color)" }}>
-                                                    <div className="absolute inset-0 bg-gradient-to-bl from-indigo-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                                    <div className="flex flex-col gap-4 items-start relative z-10">
-                                                        <span className="text-6xl font-black text-theme-muted opacity-[0.06]">{step.num}</span>
-                                                        <h3 className="text-xl sm:text-2xl lg:text-3xl font-black text-theme-primary group-hover:text-gradient transition-all duration-300">{step.title}</h3>
-                                                        <p className="text-theme-secondary text-sm sm:text-base lg:text-lg leading-relaxed max-w-lg">{step.desc}</p>
-                                                    </div>
-                                                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500 via-indigo-500 to-transparent scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-700" />
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="hidden md:block" />
-                                        )}
-
-                                        {/* Mobile card (visible only on mobile) */}
-                                        <div className="md:hidden col-span-full">
-                                            <div className="step-card-inner rounded-[24px] p-6 sm:p-8 group magnetic relative overflow-hidden backdrop-blur-xl"
-                                                style={{ background: "var(--surface)", border: "1px solid var(--border-color)" }}>
-                                                <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                                <div className="flex flex-col gap-3 relative z-10">
-                                                    <span className="text-4xl font-black text-theme-muted opacity-[0.08]">{step.num}</span>
-                                                    <h3 className="text-xl sm:text-2xl font-black text-theme-primary group-hover:text-gradient transition-all duration-300">{step.title}</h3>
-                                                    <p className="text-theme-secondary text-sm sm:text-base leading-relaxed">{step.desc}</p>
-                                                </div>
-                                                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500 via-indigo-500 to-transparent scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-700" />
-                                            </div>
-                                        </div>
-                           </div>
-                                );
-                            })}
-                        </div>
-                    </div>
+                    ))}
                 </div>
             </section>
 
@@ -761,11 +674,11 @@ export default function Home() {
             <section id="stats" className="relative overflow-hidden">
                 <div className="h-screen flex flex-col items-center justify-center px-4 sm:px-6 relative">
                     <div className="absolute inset-0 pointer-events-none -z-10 flex items-center justify-center">
-                        <span className="stats-bg-text text-[25vw] sm:text-[18vw] font-black text-theme-muted opacity-[0.03] uppercase tracking-widest select-none">IMPACT</span>
+                        <span className="stats-bg-text text-[25vw] sm:text-[18vw] font-black text-theme-muted opacity-[0.03] uppercase tracking-widest select-none">IDEAS</span>
                     </div>
                     <div className="text-center mb-16 relative z-10">
-                        <span className="inline-block px-5 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black tracking-[0.3em] text-emerald-400 uppercase mb-4">Our Numbers</span>
-                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-[-0.04em] text-theme-primary">Real <span className="text-gradient">Impact.</span></h2>
+                        <span className="inline-block px-5 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black tracking-[0.3em] text-emerald-400 uppercase mb-4">By the numbers</span>
+                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-[-0.04em] text-theme-primary">Trusted by People Who <span className="text-gradient">Ship Ideas.</span></h2>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-10 max-w-5xl w-full relative z-10" style={{ perspective: "800px" }}>
                         {stats.map((s, i) => (
@@ -818,9 +731,9 @@ export default function Home() {
                     </div>
                     <div className="cta-inner relative z-10 text-center space-y-8 max-w-3xl mx-auto">
                         <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-[-0.03em] leading-[1.1]">
-                            Ready to Build Something<br /><span className="text-white/60">Extraordinary?</span>
+                            Give Your Idea<br /><span className="text-white/60">the Attention It Deserves.</span>
                         </h2>
-                        <p className="text-white/50 text-base sm:text-lg max-w-xl mx-auto">Join thousands of innovators turning ideas into reality.</p>
+                        <p className="text-white/50 text-base sm:text-lg max-w-xl mx-auto">Post once. Get AI feedback. Get discovered. Connect with the right people. Start in minutes.</p>
                         <div className="flex flex-wrap justify-center gap-4 pt-2">
                             <Link href={user ? "/ideas" : "/register"} className="magnetic group relative px-10 sm:px-14 py-4.5 rounded-full bg-white text-gray-900 font-bold text-sm overflow-hidden hover:text-white transition-colors duration-500">
                                 <span className="relative z-10">{user ? "Explore Ideas" : "Start Free Today"}</span>
@@ -841,7 +754,7 @@ export default function Home() {
                 <div className="test-header text-center mb-16 space-y-4">
                     <span className="inline-block px-5 py-2 rounded-full bg-pink-500/10 border border-pink-500/20 text-[10px] font-black tracking-[0.3em] text-pink-400 uppercase">Testimonials</span>
                     <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-[-0.04em] text-theme-primary leading-[1.05]">
-                        Loved by <span className="text-gradient">Founders.</span>
+                        Trusted by Thinkers & <span className="text-gradient">Builders.</span>
                     </h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6" style={{ perspective: "1200px" }}>
@@ -884,7 +797,7 @@ export default function Home() {
                                 </div>
                                 <span className="text-lg font-black text-theme-primary tracking-[-0.02em]">IdeaConnect</span>
                             </div>
-                            <p className="text-sm text-theme-secondary leading-relaxed">The platform where ideas meet execution. Built for founders, by founders.</p>
+                            <p className="text-sm text-theme-secondary leading-relaxed">The marketplace where ideas get evaluated by AI, discovered by the right people, and turned into real connections and next steps.</p>
                         </div>
                         {[
                             { title: "Product", links: ["Marketplace", "Network", "Showcase", "Pricing"] },
