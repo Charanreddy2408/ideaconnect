@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Idea from "@/models/Idea";
 import Vote from "@/models/Vote";
+import "@/models/usermodel"; // register User schema for populate("userId")
 import { getAuthUserId } from "@/lib/auth";
 import { generateAIReport } from "@/lib/aiReport";
 import { calculateSimilarity } from "@/utils/similarity";
