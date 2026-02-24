@@ -52,6 +52,13 @@ export default function IdeaCard({ idea }: IdeaCardProps) {
     const [expanded, setExpanded] = useState(false);
     const meta = catMeta[idea.category] || catMeta.Tech;
 
+    const handleCardClick = () => {
+        // On mobile, tap anywhere on the card should open details
+        if (typeof window !== "undefined" && window.innerWidth < 640) {
+            router.push(`/ideas/${idea._id}`);
+        }
+    };
+
     const handleMessage = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -67,7 +74,10 @@ export default function IdeaCard({ idea }: IdeaCardProps) {
     };
 
     return (
-        <div className={`group relative rounded-3xl overflow-hidden border bg-[var(--card-bg)] backdrop-blur-xl shadow-xl transition-shadow duration-300 hover:shadow-2xl min-h-[400px] flex flex-col ${meta.border} ${meta.glow}`}>
+        <div
+            className={`group relative rounded-3xl overflow-hidden border bg-[var(--card-bg)] backdrop-blur-xl shadow-xl transition-shadow duration-300 hover:shadow-2xl min-h-[400px] flex flex-col ${meta.border} ${meta.glow}`}
+            onClick={handleCardClick}
+        >
             <div className="relative">
                 <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-500" />
                 <div className={`absolute -top-20 -right-20 w-48 h-48 rounded-full ${meta.bg} blur-3xl opacity-50 pointer-events-none`} />
@@ -155,7 +165,7 @@ export default function IdeaCard({ idea }: IdeaCardProps) {
                             <Link
                                 href={`/ideas/${idea._id}`}
                                 onClick={(e) => e.stopPropagation()}
-                                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold hover:from-violet-500 hover:to-indigo-500 transition-all shadow-lg shadow-violet-500/20 ml-auto"
+                                className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold hover:from-violet-500 hover:to-indigo-500 transition-all shadow-lg shadow-violet-500/20 ml-auto"
                             >
                                 View Details
                                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
