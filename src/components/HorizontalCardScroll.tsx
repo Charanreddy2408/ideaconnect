@@ -97,13 +97,20 @@ export default function HorizontalCardScroll({ ideas }: HorizontalCardScrollProp
                     const year = createdAt.getFullYear();
                     const month = createdAt.toLocaleDateString('en-US', { month: 'short' });
 
+                    const handleCardClick = () => {
+                        router.push(`/ideas/${idea._id}`);
+                    };
+
                     return (
                         <div
                             key={idea._id}
                             className="stream-card flex-shrink-0 w-[85vw] max-w-sm relative group"
                             style={{ scrollSnapAlign: 'start' }}
                         >
-                            <div className={`relative h-[500px] rounded-3xl overflow-hidden border ${meta.border} bg-gradient-to-br from-[var(--card-bg)] via-[var(--card-bg)] to-[var(--card-bg)] backdrop-blur-xl shadow-2xl ${meta.glow} transition-transform duration-300 group-active:scale-[0.98]`}>
+                            <div
+                                className={`relative h-[500px] rounded-3xl overflow-hidden border ${meta.border} bg-gradient-to-br from-[var(--card-bg)] via-[var(--card-bg)] to-[var(--card-bg)] backdrop-blur-xl shadow-2xl ${meta.glow} transition-transform duration-300 group-active:scale-[0.98]`}
+                                onClick={handleCardClick}
+                            >
                                 {/* Background gradient overlay */}
                                 <div 
                                     className="absolute inset-0 opacity-80"
@@ -176,17 +183,7 @@ export default function HorizontalCardScroll({ ideas }: HorizontalCardScrollProp
                                     {/* Bottom action bar */}
                                     <div className="mt-auto pt-4 border-t border-white/10">
                                         <div className="flex items-center gap-2">
-                                            {/* Play/View button */}
-                                            <Link
-                                                href={`/ideas/${idea._id}`}
-                                                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white text-black font-black text-sm hover:bg-white/90 transition-all shadow-lg"
-                                            >
-                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M8 5v14l11-7z" />
-                                                </svg>
-                                                View Details
-                                            </Link>
-
+                                            {/* Primary action: click card navigates, so this area can be a subtle play icon only if needed */}
                                             {/* Add to list button */}
                                             <button
                                                 className="w-11 h-11 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"

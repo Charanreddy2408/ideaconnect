@@ -54,6 +54,10 @@ export default function MobileFlipCard({ idea }: MobileFlipCardProps) {
     const scoreColor = idea.voteScore > 0 ? "text-emerald-400" : idea.voteScore < 0 ? "text-red-400" : "text-theme-muted";
     const scoreSign = idea.voteScore > 0 ? "+" : "";
 
+    const handleCardClick = () => {
+        router.push(`/ideas/${idea._id}`);
+    };
+
     const handleMessage = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -68,7 +72,10 @@ export default function MobileFlipCard({ idea }: MobileFlipCardProps) {
     };
 
     return (
-        <div className={`relative rounded-3xl overflow-hidden border bg-[var(--card-bg)] shadow-xl transition-shadow min-h-[320px] sm:min-h-[360px] flex flex-col ${meta.border} ${meta.glow}`}>
+        <div
+            className={`relative rounded-3xl overflow-hidden border bg-[var(--card-bg)] shadow-xl transition-shadow min-h-[320px] sm:min-h-[360px] flex flex-col ${meta.border} ${meta.glow}`}
+            onClick={handleCardClick}
+        >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-500 z-10" />
             <div className="relative z-10 flex flex-col h-full p-5">
                 <div className="flex items-center justify-between mb-3">
@@ -131,16 +138,6 @@ export default function MobileFlipCard({ idea }: MobileFlipCardProps) {
                                 </svg>
                             </button>
                         )}
-                        <Link
-                            href={`/ideas/${idea._id}`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold"
-                        >
-                            View Details
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                            </svg>
-                        </Link>
                     </div>
                 </div>
             </div>

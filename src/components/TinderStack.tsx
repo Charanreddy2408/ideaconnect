@@ -203,7 +203,10 @@ export default function TinderStack({ ideas }: TinderStackProps) {
                     onMouseDown={onStart}
                     onTouchStart={onStart}
                 >
-                    <div className={`w-full h-full rounded-3xl overflow-hidden border bg-[var(--card-bg)] shadow-xl flex flex-col ${meta.border} ${meta.glow}`}>
+                    <div
+                        className={`w-full h-full rounded-3xl overflow-hidden border bg-[var(--card-bg)] shadow-xl flex flex-col ${meta.border} ${meta.glow}`}
+                        onClick={() => router.push(`/ideas/${idea._id}`)}
+                    >
                         <div className="h-1 bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-500 shrink-0" />
                         <div className="relative z-10 flex flex-col flex-1 min-h-0 p-4 sm:p-5">
                             <div className="flex items-center justify-between mb-3">
@@ -260,16 +263,6 @@ export default function TinderStack({ ideas }: TinderStackProps) {
                                             </svg>
                                         </button>
                                     )}
-                                    <Link
-                                        href={`/ideas/${idea._id}`}
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold"
-                                    >
-                                        View Details
-                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                        </svg>
-                                    </Link>
                                 </div>
                             </div>
                         </div>

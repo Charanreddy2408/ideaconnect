@@ -53,10 +53,7 @@ export default function IdeaCard({ idea }: IdeaCardProps) {
     const meta = catMeta[idea.category] || catMeta.Tech;
 
     const handleCardClick = () => {
-        // On mobile, tap anywhere on the card should open details
-        if (typeof window !== "undefined" && window.innerWidth < 640) {
-            router.push(`/ideas/${idea._id}`);
-        }
+        router.push(`/ideas/${idea._id}`);
     };
 
     const handleMessage = async (e: React.MouseEvent) => {
@@ -162,16 +159,6 @@ export default function IdeaCard({ idea }: IdeaCardProps) {
                                     </svg>
                                 </button>
                             )}
-                            <Link
-                                href={`/ideas/${idea._id}`}
-                                onClick={(e) => e.stopPropagation()}
-                                className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold hover:from-violet-500 hover:to-indigo-500 transition-all shadow-lg shadow-violet-500/20 ml-auto"
-                            >
-                                View Details
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                </svg>
-                            </Link>
                         </div>
                     </div>
                 </div>
